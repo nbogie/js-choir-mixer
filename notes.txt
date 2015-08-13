@@ -2,6 +2,8 @@ Notes:
 
 "For longer sounds, such as music soundtracks, streaming should be used with the audio element and MediaElementAudioSourceNode." - http://www.w3.org/TR/webaudio/#AudioContext-section
 
+Section loops could be implemented using the existing loop, loopStart, loopEnd parameters in start().  "the AudioBuffer is at a specific sample-rate (usually the same as the AudioContext sample-rate), and that the loop times (in seconds) must be converted to the appropriate sample-frame positions in the buffer according to this sample-rate." - http://www.w3.org/TR/webaudio/#looping-AudioBufferSourceNode
+
 This doesn't have many methods.  I think we manipulate the underlying 
 "HTMLMediaElement.currentTime
 The current playback time, in seconds. Setting this value seeks the media to the new time.""

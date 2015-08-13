@@ -1,0 +1,12 @@
+* solo buttons for each part (radio button?)
+
+* click snapshot position to jump to that position
+
+
+
+maybe:
+=======
+
+* advance the position slider while the piece plays?
+
+* If playing, changes to the position slider immediately play at that point.

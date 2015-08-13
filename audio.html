@@ -90,7 +90,7 @@ function finishedLoading(bufferList) {
   gainNode2 = linkThroughGain(source2);
   gainNode3 = linkThroughGain(source3);
 
-  play();
+  //play();
 }
 function linkThroughGain(src){
   var gainNode = context.createGain();
@@ -124,15 +124,30 @@ function changeVolume(thing){
     //console.log("node gain is now: " + node.gain.value);
 
 }
+function lengthOfSourceInSec(){
+  return 182;
+}
+var posOffset = 0;
+
+function changePosition(elem){
+  posOffset = posSliderToSeconds(elem);
+  console.log("posOffset is now: " + posOffset);
+}
+
+function posSliderToSeconds(elem){
+  var val = parseInt(elem.value);
+  return lengthOfSourceInSec() * val / parseInt(elem.max);
+}
+
 function stop(){
   source1.stop(0);
   source2.stop(0);
   source3.stop(0);
 }
 function play(){
-  source1.start(0);
-  source2.start(0);
-  source3.start(0);
+  source1.start(0, posOffset);
+  source2.start(0, posOffset);
+  source3.start(0, posOffset);
 }
 
 </script>
@@ -146,6 +161,7 @@ function play(){
 <p>tenor: <input id="vol3" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
 <p><input type="button" value="stop" onclick="stop()"/></p>
 <p><input type="button" value="play" onclick="play()"/></p>
+<p>position: <input id="position" type="range" min="0" max="100" value="100" oninput="changePosition(this);"></p>
 </body>
 
 </html>

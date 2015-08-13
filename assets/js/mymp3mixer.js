@@ -6,6 +6,7 @@ var gainNode1, gainNode2, gainNode3;
 var posOffset = 0;
 var playStartedTime = -1;
 var playStartedOffset; // a snapshot of posOffset at start of current play
+window.onload=initmp3mixer;
  
 function BufferLoader(context, urlList, callback) {
   this.context = context;

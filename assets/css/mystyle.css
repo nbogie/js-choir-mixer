@@ -1,0 +1,34 @@
+input[type=button] {
+    background-color: #FFAAAA;
+}
+input[type=range] {
+    width: 550px;
+}
+
+p.sliderrow
+{
+width: 80%;
+}
+
+p.sliderrow>label
+{
+    width: 25%;
+    float: left;
+    
+}
+
+p.sliderrow>input
+{
+    width: 75%;
+    float: left;
+    background: yellow;
+}
+#volumeset {
+
+}
+#transportbuttons>ul {
+  list-style-type: none;
+}
+#transportbuttons{
+  float: none;
+}

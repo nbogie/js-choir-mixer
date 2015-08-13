@@ -1,6 +1,13 @@
 <html>
 <head>
+<link href="assets/css/mystyle.css" rel="stylesheet">
+<style>
+</style>
+
 <script>
+
+var gBufferList;
+
 
 function BufferLoader(context, urlList, callback) {
   this.context = context;
@@ -83,19 +90,34 @@ function createBuffer(b){
   return src;
 }
 
+function createGainedBuffer(b){
+  var src = createBuffer(b);
+  var gainNode = linkThroughGain(src);
+  return [src, gainNode];
+}
+
+function createAllBuffers(bufferList){
+  [source1, gainNode1] = createGainedBuffer(bufferList[0]);
+  [source2, gainNode2] = createGainedBuffer(bufferList[1]);
+  [source3, gainNode3] = createGainedBuffer(bufferList[2]);
+}
+
+
 function finishedLoading(bufferList) {
+  gBufferList = bufferList;
   // Create three sources and play them both together.
-  source1 = createBuffer(bufferList[0]);
-  source2 = createBuffer(bufferList[1]);
-  source3 = createBuffer(bufferList[2]);
-
-  // Create a gain node.
-  gainNode1 = linkThroughGain(source1);
-  gainNode2 = linkThroughGain(source2);
-  gainNode3 = linkThroughGain(source3);
-
+  //createAllBuffers(bufferList);
   //play();
 }
+function wipeAllBuffers(){
+  source1 = null;
+  source2 = null;
+  source3 = null;
+  gainNode1 = null;
+  gainNode2 = null;
+  gainNode3 = null;
+}
+
 function linkThroughGain(src){
   var gainNode = context.createGain();
   src.connect(gainNode);
@@ -105,6 +127,9 @@ function linkThroughGain(src){
 }
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
 function changeVolume(thing){
+  //TODO: volume changes while no buffers loaded must be allowed, and must persist when buffers are reloaded (e.g. play position changed and all recreated).
+  // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
+
   var numstr = thing.id.substring(3,4);
   var num = parseInt(numstr);
   var val = parseInt(thing.value);
@@ -135,23 +160,47 @@ var posOffset = 0;
 
 function changePosition(elem){
   posOffset = posSliderToSeconds(elem);
+  document.getElementById("positionOutput").value = posOffset;
   console.log("posOffset is now: " + posOffset);
 }
 
 function posSliderToSeconds(elem){
-  var val = parseInt(elem.value);
-  return lengthOfSourceInSec() * val / parseInt(elem.max);
+  var val = parseFloat(elem.value);
+  return Math.round(lengthOfSourceInSec() * val / parseInt(elem.max));
 }
 
 function stop(){
-  source1.stop(0);
-  source2.stop(0);
-  source3.stop(0);
+  playStartedTime = -1;
+  if(source1){
+    source1.stop(0);
+    source2.stop(0);
+    source3.stop(0);
+    wipeAllBuffers();
+  }
 }
+var playStartedTime = -1;
+var playStartedOffset; // a snapshot of posOffset at start of current play
+  
 function play(){
+  stop();
+  createAllBuffers(gBufferList);
+  playStartedTime = context.currentTime;
+  playStartedOffset = posOffset;
   source1.start(0, posOffset);
   source2.start(0, posOffset);
   source3.start(0, posOffset);
+}
+
+function snapshotTime(){
+  if (playStartedTime < 0){
+    console.log("ERROR: can't yet snapshot time when stopped");
+  } else {
+    var elapsedSecs = context.currentTime - playStartedTime;
+    var trackTime = playStartedOffset + elapsedSecs;
+    var snapshotName = document.getElementById("snapshotName").value;
+    var elem = document.getElementById("snapshots");
+    elem.innerHTML = elem.innerHTML + "<li>" + snapshotName + ": " + trackTime + "s</li>";
+  }
 }
 
 </script>
@@ -160,12 +209,23 @@ function play(){
 <body>
 <p>Playing multiple mp3s with web audio</p>
 
-<p>soprano: <input id="vol1" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
-<p>alto: <input id="vol2" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
-<p>tenor: <input id="vol3" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
-<p><input type="button" value="stop" onclick="stop()"/></p>
-<p><input type="button" value="play" onclick="play()"/></p>
-<p>position: <input id="position" type="range" min="0" max="100" value="100" oninput="changePosition(this);"></p>
-</body>
+<div id="volumeset">
+  <p class='sliderrow'><label>Soprano:</label><input id="vol1" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
+<p class='sliderrow'><label>Alto:</label><input id="vol2" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
+<p class='sliderrow'><label>Tenor:</label><input id="vol3" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
+</div>
+<div id="transportbuttons">
+  <ul>
+    <li><input type="button" value="stop" onclick="stop()"/></li>
+    <li><input type="button" value="play" onclick="play()"/></li>
+    <li><input type="button" value="mark time" onclick="snapshotTime()"/><input id="snapshotName" type="text" value=""/></li>
+  </ul>
+</div>
+<p>position: <input id="position" type="range" min="0" max="100" value="100" step="0.3" oninput="changePosition(this);"> <input id="positionOutput" type="text" value="??"/></p>
+</p>
+<div>
+  <ul id="snapshots">
+  </ul>
+</div></body>
 
 </html>

@@ -1,0 +1,8 @@
+Notes:
+
+"For longer sounds, such as music soundtracks, streaming should be used with the audio element and MediaElementAudioSourceNode." - http://www.w3.org/TR/webaudio/#AudioContext-section
+
+This doesn't have many methods.  I think we manipulate the underlying 
+"HTMLMediaElement.currentTime
+The current playback time, in seconds. Setting this value seeks the media to the new time.""
+- https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement

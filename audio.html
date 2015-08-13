@@ -76,14 +76,18 @@ function init() {
 var source1, source2, source3;
 var gainNode1, gainNode2, gainNode3;
 
+
+function createBuffer(b){
+  var src = context.createBufferSource();
+  src.buffer = b;
+  return src;
+}
+
 function finishedLoading(bufferList) {
   // Create three sources and play them both together.
-  source1 = context.createBufferSource();
-  source2 = context.createBufferSource();
-  source3 = context.createBufferSource();
-  source1.buffer = bufferList[0];
-  source2.buffer = bufferList[1];
-  source3.buffer = bufferList[2];
+  source1 = createBuffer(bufferList[0]);
+  source2 = createBuffer(bufferList[1]);
+  source3 = createBuffer(bufferList[2]);
 
   // Create a gain node.
   gainNode1 = linkThroughGain(source1);

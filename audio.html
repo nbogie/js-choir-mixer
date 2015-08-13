@@ -74,6 +74,7 @@ function init() {
 }
 
 var source1, source2, source3;
+var gainNode1, gainNode2, gainNode3;
 
 function finishedLoading(bufferList) {
   // Create three sources and play them both together.
@@ -84,13 +85,44 @@ function finishedLoading(bufferList) {
   source2.buffer = bufferList[1];
   source3.buffer = bufferList[2];
 
-  source1.connect(context.destination);
-  source2.connect(context.destination);
-  source3.connect(context.destination);
+  // Create a gain node.
+  gainNode1 = linkThroughGain(source1);
+  gainNode2 = linkThroughGain(source2);
+  gainNode3 = linkThroughGain(source3);
+
   play();
 }
+function linkThroughGain(src){
+  var gainNode = context.createGain();
+  src.connect(gainNode);
+  gainNode.connect(context.destination);
+  gainNode.gain.value = 1;
+  return gainNode;
+}
+//expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
 function changeVolume(thing){
-  console.log("changeVolume "+ thing.id + " val: " + thing.value);
+  var numstr = thing.id.substring(3,4);
+  var num = parseInt(numstr);
+  var val = parseInt(thing.value);
+  //console.log("changeVolume "+ thing.id + " val: " + thing.value + " value: " + val);
+  
+  var node;
+  switch(num) {
+    case 1:
+        node = gainNode1;
+        break;
+    case 2:
+        node = gainNode2;
+        break;
+    case 3:
+        node = gainNode3;
+        break;
+    default:
+        console.log("ERROR: unexpected num: "+ num + " from id " + thing.id );
+    }    
+    node.gain.value = val/100.0;
+    //console.log("node gain is now: " + node.gain.value);
+
 }
 function stop(){
   source1.stop(0);
@@ -109,9 +141,9 @@ function play(){
 <body>
 <p>Playing multiple mp3s with web audio</p>
 
-<p>soprano: <input id="vol0" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
-<p>alto: <input id="vol1" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
-<p>tenor: <input id="vol2" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
+<p>soprano: <input id="vol1" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
+<p>alto: <input id="vol2" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
+<p>tenor: <input id="vol3" type="range" min="0" max="100" value="100" oninput="changeVolume(this);"></p>
 <p><input type="button" value="stop" onclick="stop()"/></p>
 <p><input type="button" value="play" onclick="play()"/></p>
 </body>

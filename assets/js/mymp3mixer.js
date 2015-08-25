@@ -111,16 +111,32 @@ function toggleMute(elem) {
   var pair = sourceAndGainPairs[n];
   pair.gainNode.gain.cancelScheduledValues(context);
   console.log("before: " + pair.gainNode.gain.value + " and class " + elem.className);
-  window.setTimeout(function() { 
-    if (elem.className === "mutebutton") {
-      pair.gainNode.gain.value = 0;
-      elem.className = "mutebutton-muted";
-    } else {
-      pair.gainNode.gain.value = 1;
-      elem.className = "mutebutton";
-    }  
+  if (elem.className === "mutebutton") {
+    pair.gainNode.gain.value = 0;
+    elem.className = "mutebutton-muted";
+  } else {
+    pair.gainNode.gain.value = 1;
+    elem.className = "mutebutton";
+  }  
   console.log("after: " + pair.gainNode.gain.value + " and class " + elem.className);
-  },100);
+
+}
+
+function muteTracksAccordingToDOM() {
+  //TODO: have all those buttons have a common class (and another class in list (or data attrib) to show mute state)
+  var muteButtonsMuted   = document.getElementsByClassName("mutebutton-muted");
+  $( ".mutebutton-muted").each(function(index) {
+    var elem = this;
+    var n    = getTrailingDigit(elem, "mute");
+    var pair = sourceAndGainPairs[n];
+    pair.gainNode.gain.cancelScheduledValues(context);
+    if (elem.className === "mutebutton") {
+      pair.gainNode.gain.value = 1;
+    } else {
+      pair.gainNode.gain.value = 0;
+    }
+  });
+
 }
 
 function createBuffer(b){
@@ -237,6 +253,9 @@ function play(){
     isPlaying = false;    
   }
   createAllBuffers(gBufferList);
+
+  muteTracksAccordingToDOM();
+
   playStartedTime = context.currentTime;
   playStartedOffset = posOffset;
   sourceAndGainPairs.forEach(function(pair) {

@@ -8,3 +8,6 @@ This doesn't have many methods.  I think we manipulate the underlying
 "HTMLMediaElement.currentTime
 The current playback time, in seconds. Setting this value seeks the media to the new time.""
 - https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement
+
+A self-closed script tag <script src="foo.js" /> will cause silent failure.
+Forgetting to return something an a list.map(function(elem)) { elem; }); will give you null back instead of a "collected" list.

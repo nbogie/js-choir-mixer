@@ -56,9 +56,6 @@ BufferLoader.prototype.load = function() {
   this.loadBuffer(this.urlList[i], i);
 };
 
-
-
-
 function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
@@ -75,9 +72,35 @@ function initmp3mixer() {
     );
 
   bufferLoader.load();
-
+  [1,2,3].forEach(function(i) { 
+    $('#vol'+i).on('change', function(e){ changeVolume(this); } );
+    $('#mute'+i).on('click', function(e){ toggleMute(this); });
+  });
 }
 
+function getTrailingDigit(elem,prefix) {
+  var l = prefix.length;
+  var numstr = elem.id.substring(l,l+1);
+  return parseInt(numstr);
+}
+
+function toggleMute(elem) {
+  console.log("Toggling mute on elem: " + elem.id);
+  var n = getTrailingDigit(elem, "mute");
+  var pair = sourceAndGainPairs[n-1];
+  pair.gainNode.gain.cancelScheduledValues(context);
+  console.log("before: " + pair.gainNode.gain.value + " and class " + elem.className);
+  window.setTimeout(function() { 
+    if (elem.className === "mutebutton") {
+      pair.gainNode.gain.value = 0;
+      elem.className = "mutebutton-muted";
+    } else {
+      pair.gainNode.gain.value = 1;
+      elem.className = "mutebutton";
+    }  
+  console.log("after: " + pair.gainNode.gain.value + " and class " + elem.className);
+  },100);
+}
 
 function createBuffer(b){
   var src = context.createBufferSource();

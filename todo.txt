@@ -1,8 +1,12 @@
+* re-apply mute-button states to sources once they've been re-created (e.g. on seek, pause, etc)
+
+* allow mute buttons to be changed even when the gain nodes they affect are stale or non-existent.
+
 * solo buttons for each part (radio button?)
 
 * click snapshot position to jump to that position
 
-
+* drop the overall gain when as more tracks are added.
 
 maybe:
 =======

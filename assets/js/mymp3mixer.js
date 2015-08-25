@@ -17,6 +17,23 @@ function BufferLoader(context, urlList, callback) {
   this.loadCount = 0;
 }
 
+ function loadJSONSync(path, callback) {   
+
+    var xobj = new XMLHttpRequest();
+        xobj.overrideMimeType("application/json");
+    xobj.open('GET', path, false);
+    xobj.onreadystatechange = function () {
+          console.log("on ready from geting " + path + " readystate: " + xobj.readyState + " and status: " + xobj.status);
+          if (xobj.readyState == 4 && xobj.status == 0) { // TODO: "200" when web-served.
+            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+            callback(xobj.responseText);
+          }
+    };
+    xobj.send(null);  
+ }
+ 
+
+
 BufferLoader.prototype.loadBuffer = function(url, index) {
   // Load buffer asynchronously
   var request = new XMLHttpRequest();
@@ -60,22 +77,26 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  var songDirs = ["close_to_me", "deep_river", "as"];
+  var songDir = songDirs[1];
+  var path = "sounds/" + songDir + "/index.json";
+  var trackNames = [];
+  loadJSONSync(path, function(response) { 
+    var json = JSON.parse(response);
+    trackNames = json.tracks.map(function(t) { return t.name; });
+    console.log(json);
+  });
   context = new AudioContext();
   isPlaying = false;
-  var songDir = "deep_river"; //"as";
   bufferLoader = new BufferLoader(
     context,
-    ['soprano', 'alto', 'tenor'].map(function(n) {
-      return "sounds/" + songDir + "/" + n + ".mp3";
+    trackNames.map(function(n) {
+      return "sounds/" + songDir + "/" + n;
     }),
     finishedLoading
     );
 
   bufferLoader.load();
-  [1,2,3].forEach(function(i) { 
-    $('#vol'+i).on('change', function(e){ changeVolume(this); } );
-    $('#mute'+i).on('click', function(e){ toggleMute(this); });
-  });
 }
 
 function getTrailingDigit(elem,prefix) {
@@ -87,7 +108,7 @@ function getTrailingDigit(elem,prefix) {
 function toggleMute(elem) {
   console.log("Toggling mute on elem: " + elem.id);
   var n = getTrailingDigit(elem, "mute");
-  var pair = sourceAndGainPairs[n-1];
+  var pair = sourceAndGainPairs[n];
   pair.gainNode.gain.cancelScheduledValues(context);
   console.log("before: " + pair.gainNode.gain.value + " and class " + elem.className);
   window.setTimeout(function() { 
@@ -120,10 +141,37 @@ function createAllBuffers(bufferList){
   });
 }
 
+function makeControlsForTrack(buf, i) {
+
+  var group        = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
+  var label      = $("<label/>", {text: "Track " + i});
+  var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
+  var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100"});
+  
+  group.append(label);
+  group.append(muteButton);
+  group.append(slider);
+  $("#controlset").append(group);
+
+  $('#vol'+i).on('change', function(e) { changeVolume(this); } );
+  $('#mute'+i).on('click', function(e) { toggleMute(this); });
+  
+}
+
+function createControlsInDOM(bufferList) {
+  console.log("creating controls in DOM for n tracks " + bufferList);
+
+  bufferList.forEach(function(buf, i) {
+    makeControlsForTrack(buf, i);
+  });
+}
+
 function finishedLoading(bufferList) {
   gBufferList = bufferList;
   // Create three sources and play them both together.
   createAllBuffers(bufferList);
+  createControlsInDOM(bufferList);
+
   //play();
 }
 function wipeAllBuffers(){
@@ -147,8 +195,8 @@ function changeVolume(thing){
   var val = parseInt(thing.value);
   
 
-  var pair = sourceAndGainPairs[num - 1];
-  console.log("changeVolume "+ thing.id + " num: "+ num +" val: " + thing.value + " value: " + val + " and val-1 is " + (val -1) + " and that pair is " + pair);
+  var pair = sourceAndGainPairs[num];
+  console.log("changeVolume "+ thing.id + " num: "+ num +" val: " + thing.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
   
   var gainNode = pair.gainNode;
   gainNode.gain.value = val/100.0;

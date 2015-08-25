@@ -12,7 +12,7 @@ width: 80%;
 
 p.sliderrow>label
 {
-    width: 20%;
+    width: 10%;
     float: left;  
 }
 
@@ -27,13 +27,13 @@ p.sliderrow>.mutebutton
 {
     float: left;
 }
-.mutebutton-muted
+p.sliderrow>.mutebutton-muted
 {
     float: left;
     background: #bbbbbb;
 }
 
-#volumeset {
+#controlset {
 
 }
 #transportbuttons>ul {

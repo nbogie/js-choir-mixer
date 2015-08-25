@@ -10,11 +10,11 @@ var playStartedTime = -1;
 var playStartedOffset; // a snapshot of posOffset at start of current play
  
 function BufferLoader(context, urlList, callback) {
-  this.context = context;
-  this.urlList = urlList;
-  this.onload = callback;
+  this.context    = context;
+  this.urlList    = urlList;
+  this.onload     = callback;
   this.bufferList = [];
-  this.loadCount = 0;
+  this.loadCount  = 0;
 }
 
  function loadJSONSync(path, callback) {   
@@ -77,17 +77,17 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs = ["close_to_me", "deep_river", "as"];
-  var songDir = songDirs[1];
-  var path = "sounds/" + songDir + "/index.json";
+  var songDirs   = ["close_to_me", "deep_river", "as"];
+  var songDir    = songDirs[1];
+  var path       = "sounds/" + songDir + "/index.json";
   var trackNames = [];
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
     trackNames = json.tracks.map(function(t) { return t.name; });
     console.log(json);
   });
-  context = new AudioContext();
-  isPlaying = false;
+  context      = new AudioContext();
+  isPlaying    = false;
   bufferLoader = new BufferLoader(
     context,
     trackNames.map(function(n) {
@@ -107,7 +107,7 @@ function getTrailingDigit(elem,prefix) {
 
 function toggleMute(elem) {
   console.log("Toggling mute on elem: " + elem.id);
-  var n = getTrailingDigit(elem, "mute");
+  var n    = getTrailingDigit(elem, "mute");
   var pair = sourceAndGainPairs[n];
   pair.gainNode.gain.cancelScheduledValues(context);
   console.log("before: " + pair.gainNode.gain.value + " and class " + elem.className);
@@ -143,7 +143,7 @@ function createAllBuffers(bufferList){
 
 function makeControlsForTrack(buf, i) {
 
-  var group        = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
+  var group      = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
   var label      = $("<label/>", {text: "Track " + i});
   var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
   var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100"});
@@ -191,14 +191,13 @@ function changeVolume(thing){
   // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
 
   var numstr = thing.id.substring(3,4);
-  var num = parseInt(numstr);
-  var val = parseInt(thing.value);
+  var num    = parseInt(numstr);
+  var val    = parseInt(thing.value);
   
-
   var pair = sourceAndGainPairs[num];
   console.log("changeVolume "+ thing.id + " num: "+ num +" val: " + thing.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
   
-  var gainNode = pair.gainNode;
+  var gainNode        = pair.gainNode;
   gainNode.gain.value = val/100.0;
   //console.log("node gain is now: " + gainNode.gain.value);
 
@@ -250,10 +249,10 @@ function snapshotTime(){
   if (playStartedTime < 0){
     console.log("ERROR: can't yet snapshot time when stopped");
   } else {
-    var elapsedSecs = context.currentTime - playStartedTime;
-    var trackTime = playStartedOffset + elapsedSecs;
+    var elapsedSecs  = context.currentTime - playStartedTime;
+    var trackTime    = playStartedOffset + elapsedSecs;
     var snapshotName = document.getElementById("snapshotName").value;
-    var elem = document.getElementById("snapshots");
-    elem.innerHTML = elem.innerHTML + "<li>" + snapshotName + ": " + trackTime + "s</li>";
+    var elem         = document.getElementById("snapshots");
+    elem.innerHTML   = elem.innerHTML + "<li>" + snapshotName + ": " + trackTime + "s</li>";
   }
 }

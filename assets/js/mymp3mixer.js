@@ -4,6 +4,8 @@ var context;
 var bufferLoader;
 var sourceAndGainPairs;
 var trackNames;
+var songTitle;
+
 
 var isPlaying; //Fixme: ask the API, instead
 
@@ -84,6 +86,7 @@ function initmp3mixer() {
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
+    songTitle = json.title || "Untitled";
     trackNames = json.tracks.map(function(t) { return t.name; });
     console.log(json);
   });
@@ -99,6 +102,7 @@ function initmp3mixer() {
     );
 
   bufferLoader.load();
+  document.getElementById("songTitle").innerHTML = songTitle;
 }
 
 function getTrailingDigit(elem,prefix) {
@@ -160,13 +164,17 @@ function createAllBuffers(bufferList){
     return createGainedBuffer(buf);
   });
 }
+function simpleTrackName(i){
+  var input = trackNames[i];
+  return input.substr(0, input.lastIndexOf('.')) || input;
+}
 
 function makeControlsForTrack(buf, i) {
 
   var group      = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
-  var label      = $("<label/>", {text: trackNames[i]});//TODO: sanitise track names for security
+  var label      = $("<label/>", {text: simpleTrackName(i), title: trackNames[i]});//TODO: sanitise track names for security
   var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
-  var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100"});
+  var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100", title: "Change volume of " + trackNames[i]});
   
   group.append(label);
   group.append(muteButton);
@@ -179,8 +187,6 @@ function makeControlsForTrack(buf, i) {
 }
 
 function createControlsInDOM(bufferList) {
-  console.log("creating controls in DOM for n tracks " + bufferList);
-
   bufferList.forEach(function(buf, i) {
     makeControlsForTrack(buf, i);
   });
@@ -220,6 +226,7 @@ function changeVolume(elem){
   var gainNode        = pair.gainNode;
   gainNode.gain.value = val/100.0;
 }
+
 function lengthOfSourceInSec(){
   return 182;
 }

@@ -1,0 +1,32 @@
+{  
+   "title":"Close To Me - The Cure",
+   "tracks":[  
+      {  
+         "name":"orig.mp3"
+      },
+      {  
+         "name":"drums.mp3"
+      },
+      {  
+         "name":"snare.mp3"
+      },
+      {  
+         "name":"shaker.mp3"
+      },
+      {  
+         "name":"bass.mp3"
+      },
+      {  
+         "name":"brass.mp3"
+      },
+      {  
+         "name":"organ.mp3"
+      },
+      {  
+         "name":"verse.mp3"
+      },
+      {  
+         "name":"xylo.mp3"
+      }
+   ]
+}

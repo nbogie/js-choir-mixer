@@ -79,8 +79,8 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs   = ["close_to_me", "deep_river", "as"];
-  var songDir    = songDirs[0];
+  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things"];
+  var songDir    = songDirs[3];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);

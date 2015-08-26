@@ -78,7 +78,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as"];
-  var songDir    = songDirs[1];
+  var songDir    = songDirs[0];
   var path       = "sounds/" + songDir + "/index.json";
   var trackNames = [];
   loadJSONSync(path, function(response) { 
@@ -124,7 +124,6 @@ function toggleMute(elem) {
 
 function muteTracksAccordingToDOM() {
   //TODO: have all those buttons have a common class (and another class in list (or data attrib) to show mute state)
-  var muteButtonsMuted   = document.getElementsByClassName("mutebutton-muted");
   $( ".mutebutton-muted").each(function(index) {
     var elem = this;
     var n    = getTrailingDigit(elem, "mute");
@@ -137,6 +136,11 @@ function muteTracksAccordingToDOM() {
     }
   });
 
+}
+function gainTracksAccordingToDOM() {
+  $( ".slider").each(function(index) {
+    changeVolume(this);
+  });
 }
 
 function createBuffer(b){
@@ -202,21 +206,19 @@ function linkThroughGain(src){
   return gainNode;
 }
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
-function changeVolume(thing){
+function changeVolume(elem){
   //TODO: volume changes while no buffers loaded must be allowed, and must persist when buffers are reloaded (e.g. play position changed and all recreated).
   // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
 
-  var numstr = thing.id.substring(3,4);
+  var numstr = elem.id.substring(3,4);
   var num    = parseInt(numstr);
-  var val    = parseInt(thing.value);
+  var val    = parseInt(elem.value);
   
   var pair = sourceAndGainPairs[num];
-  console.log("changeVolume "+ thing.id + " num: "+ num +" val: " + thing.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
+  console.log("changeVolume "+ elem.id + " num: "+ num +" val: " + elem.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
   
   var gainNode        = pair.gainNode;
   gainNode.gain.value = val/100.0;
-  //console.log("node gain is now: " + gainNode.gain.value);
-
 }
 function lengthOfSourceInSec(){
   return 182;
@@ -254,8 +256,9 @@ function play(){
   }
   createAllBuffers(gBufferList);
 
+  gainTracksAccordingToDOM();
   muteTracksAccordingToDOM();
-
+  
   playStartedTime = context.currentTime;
   playStartedOffset = posOffset;
   sourceAndGainPairs.forEach(function(pair) {

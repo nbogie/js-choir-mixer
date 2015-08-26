@@ -3,6 +3,8 @@ var gBufferList;
 var context;
 var bufferLoader;
 var sourceAndGainPairs;
+var trackNames;
+
 var isPlaying; //Fixme: ask the API, instead
 
 var posOffset = 0;
@@ -80,12 +82,12 @@ function initmp3mixer() {
   var songDirs   = ["close_to_me", "deep_river", "as"];
   var songDir    = songDirs[0];
   var path       = "sounds/" + songDir + "/index.json";
-  var trackNames = [];
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
     trackNames = json.tracks.map(function(t) { return t.name; });
     console.log(json);
   });
+  
   context      = new AudioContext();
   isPlaying    = false;
   bufferLoader = new BufferLoader(
@@ -136,7 +138,7 @@ function muteTracksAccordingToDOM() {
 
 }
 function gainTracksAccordingToDOM() {
-  $( ".slider").each(function(index) {
+  $(".slider").each(function(index) {
     changeVolume(this);
   });
 }
@@ -150,7 +152,7 @@ function createBuffer(b){
 function createGainedBuffer(b){
   var src = createBuffer(b);
   var gainNode = linkThroughGain(src);
-  return {src: src, gainNode: gainNode};
+  return {title: b, src: src, gainNode: gainNode};
 }
 
 function createAllBuffers(bufferList){
@@ -162,7 +164,7 @@ function createAllBuffers(bufferList){
 function makeControlsForTrack(buf, i) {
 
   var group      = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
-  var label      = $("<label/>", {text: "Track " + i});
+  var label      = $("<label/>", {text: trackNames[i]});//TODO: sanitise track names for security
   var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
   var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100"});
   
@@ -246,14 +248,19 @@ function stop(){
     wipeAllBuffers();
   }
 }
- 
+ function setAllBuffersToLoop(shouldLoop) {
+  sourceAndGainPairs.forEach(function(pair) {
+    pair.src.loop = shouldLoop;
+  } );
+ }
+
 function play(){
   if (isPlaying){
     stop();
     isPlaying = false;    
   }
   createAllBuffers(gBufferList);
-
+  setAllBuffersToLoop(true);
   gainTracksAccordingToDOM();
   muteTracksAccordingToDOM();
   

@@ -110,29 +110,27 @@ function toggleMute(elem) {
   var n    = getTrailingDigit(elem, "mute");
   var pair = sourceAndGainPairs[n];
   pair.gainNode.gain.cancelScheduledValues(context);
-  console.log("before: " + pair.gainNode.gain.value + " and class " + elem.className);
-  if (elem.className === "mutebutton") {
-    pair.gainNode.gain.value = 0;
-    elem.className = "mutebutton-muted";
-  } else {
+  console.log("before: " + pair.gainNode.gain.value + " and classes " + elem.classList);
+  if (elem.classList.contains("mutebutton-muted")) {
     pair.gainNode.gain.value = 1;
-    elem.className = "mutebutton";
+  } else {
+    pair.gainNode.gain.value = 0;
   }  
-  console.log("after: " + pair.gainNode.gain.value + " and class " + elem.className);
+  elem.classList.toggle("mutebutton-muted");
+  console.log("after: " + pair.gainNode.gain.value + " and classes " + elem.classList);
 
 }
 
 function muteTracksAccordingToDOM() {
-  //TODO: have all those buttons have a common class (and another class in list (or data attrib) to show mute state)
   $( ".mutebutton-muted").each(function(index) {
     var elem = this;
     var n    = getTrailingDigit(elem, "mute");
     var pair = sourceAndGainPairs[n];
     pair.gainNode.gain.cancelScheduledValues(context);
-    if (elem.className === "mutebutton") {
-      pair.gainNode.gain.value = 1;
-    } else {
+    if (elem.classList.contains("mutebutton-muted")) {
       pair.gainNode.gain.value = 0;
+    } else {
+      pair.gainNode.gain.value = 1;
     }
   });
 

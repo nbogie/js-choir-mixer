@@ -4,6 +4,7 @@ var context;
 var bufferLoader;
 var sourceAndGainPairs;
 var trackNames;
+var sectionStarts;
 var songTitle;
 
 
@@ -12,6 +13,7 @@ var isPlaying; //Fixme: ask the API, instead
 var posOffset = 0;
 var playStartedTime = -1;
 var playStartedOffset; // a snapshot of posOffset at start of current play
+var playbackRate;
  
 function BufferLoader(context, urlList, callback) {
   this.context    = context;
@@ -36,8 +38,6 @@ function BufferLoader(context, urlList, callback) {
     xobj.send(null);  
  }
  
-
-
 BufferLoader.prototype.loadBuffer = function(url, index) {
   // Load buffer asynchronously
   var request = new XMLHttpRequest();
@@ -81,13 +81,16 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things"];
-  var songDir    = songDirs[3];
+  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts"];
+  var songDir    = songDirs[4];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
     songTitle = json.title || "Untitled";
     trackNames = json.tracks.map(function(t) { return t.name; });
+    sectionStarts = json.sectionStarts || [];
+    playbackRate = 1;
+    recreateSectionStartsInDOM();
     console.log(json);
   });
   
@@ -149,6 +152,7 @@ function gainTracksAccordingToDOM() {
 
 function createBuffer(b){
   var src = context.createBufferSource();
+  src.playbackRate.value = 1;
   src.buffer = b;
   return src;
 }
@@ -190,6 +194,8 @@ function createControlsInDOM(bufferList) {
   bufferList.forEach(function(buf, i) {
     makeControlsForTrack(buf, i);
   });
+  $('#positionSlider').on('input', function(e) { handleChangePosition(this); } );
+  $('#playbackRateSlider').on('input', function(e) { handleChangePlaybackRate(this); } );
 }
 
 function finishedLoading(bufferList) {
@@ -228,18 +234,19 @@ function changeVolume(elem){
 }
 
 function lengthOfSourceInSec(){
-  return 182;
+  return sourceAndGainPairs[0].src.buffer.duration;
 }
 
-function changePosition(elem){
-  posOffset = posSliderToSeconds(elem);
-  document.getElementById("positionOutput").value = posOffset;
-  console.log("posOffset is now: " + posOffset);
+
+function handleChangePosition(elem){
+  updatePosOffset(convertSliderValueToSeconds(elem));
+}
+function handleChangePlaybackRate(elem){
+  updatePlaybackRate(parseFloat(elem.value));
 }
 
-function posSliderToSeconds(elem){
-  var val = parseFloat(elem.value);
-  return Math.round(lengthOfSourceInSec() * val / parseInt(elem.max));
+function convertSliderValueToSeconds(elem){
+  return Math.round(lengthOfSourceInSec() * parseFloat(elem.value) / parseInt(elem.max));
 }
 
 function stop(){
@@ -268,6 +275,7 @@ function play(){
   }
   createAllBuffers(gBufferList);
   setAllBuffersToLoop(true);
+  setPlaybackRateForAllBuffers(playbackRate);
   gainTracksAccordingToDOM();
   muteTracksAccordingToDOM();
   
@@ -278,6 +286,11 @@ function play(){
   } );
   isPlaying = true;
 }
+function setPlaybackRateForAllBuffers(r){
+  sourceAndGainPairs.forEach(function(pair) {
+    pair.src.playbackRate.value = r;
+  } );
+}
 
 function snapshotTime(){
   if (playStartedTime < 0){
@@ -285,8 +298,46 @@ function snapshotTime(){
   } else {
     var elapsedSecs  = context.currentTime - playStartedTime;
     var trackTime    = playStartedOffset + elapsedSecs;
-    var snapshotName = document.getElementById("snapshotName").value;
-    var elem         = document.getElementById("snapshots");
-    elem.innerHTML   = elem.innerHTML + "<li>" + snapshotName + ": " + trackTime + "s</li>";
+    var label = document.getElementById("snapshotName").value;
+    
+    sectionStarts.push({time: trackTime, label: label});
+    console.log("starts: "+ sectionStarts.map(function(s) { return s.label; }));
+
+    recreateSectionStartsInDOM();
   }
 }
+function updatePlaybackRate(val) {
+  playbackRate = val;
+  document.getElementById("playbackRateOutput").value = playbackRate;
+  console.log("playbackRate is now: " + playbackRate);
+}
+function updatePosOffset(val) {
+  posOffset = val;
+  document.getElementById("positionOutput").value = posOffset;
+  console.log("posOffset is now: " + posOffset);
+}
+
+function jumpToSection(i) {
+  console.log("jump to section: " + i);
+  //var val = convertSecondsToSliderValue(sectionStarts[i]);
+  var secs = sectionStarts[i].time;
+  updatePosOffset(secs);
+  play();
+  //TODO: update slider to reflect new position
+}
+
+function recreateSectionStartsInDOM() {
+  console.log(sectionStarts);
+  $('#snapshots').innertHTML = "";
+
+  sectionStarts.forEach(function(s, i) {
+    var labelSpan = $('<span/>', {class: "sectionStartLabel", text: s.label});
+    var timeSpan = $('<span/>', {class: "sectionStartTime", text: Math.round(s.time)});
+    var listItem = $('<li/>', {class: "sectionStart", id: "sectionStart"+i});
+    listItem.append(timeSpan);
+    listItem.append(labelSpan);
+    $('#snapshots').append(listItem);    
+    $('#sectionStart'+i).on('click', function(e) { jumpToSection(i); });
+    console.log("clicking " + s.label + " will jump you to " +i);
+  });
+}  

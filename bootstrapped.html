@@ -70,6 +70,7 @@
 
   <div id="controlset">
   </div>
+
   <div id="transportbuttons">
     <ul>
       <li><input type="button" value="stop" onclick="stop()"/></li>
@@ -77,7 +78,14 @@
       <li><input type="button" value="mark time" onclick="snapshotTime()"/><input id="snapshotName" type="text" value=""/></li>
     </ul>
   </div>
-  <p>position: <input id="position" type="range" min="0" max="100" value="100" step="0.3" oninput="changePosition(this);"> <input id="positionOutput" type="text" value="??"/></p>
+
+  <p>position:
+    <input id="positionSlider" type="range" min="0" max="100" value="100" step="0.3">
+    <input id="positionOutput" type="text" value="??"/>
+  </p>
+    <p>playbackRate:
+    <input id="playbackRateSlider" type="range" min="0.5" max="4" value="1" step="0.05"> <!--  oninput="handleChangePlaybackRate(this);"> -->
+    <input id="playbackRateOutput" type="text" value="1"/>
   </p>
   <div>
     <ul id="snapshots">

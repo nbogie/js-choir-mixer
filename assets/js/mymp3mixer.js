@@ -6,7 +6,7 @@ var sourceAndGainPairs;
 var trackNames;
 var sectionStarts;
 var songTitle;
-
+var numFrames = 0;
 
 var isPlaying; //Fixme: ask the API, instead
 
@@ -14,6 +14,10 @@ var posOffset = 0;
 var playStartedTime = -1;
 var playStartedOffset; // a snapshot of posOffset at start of current play
 var playbackRate;
+
+var demoWaveformConfig = { type: "waveform", size: 1024};
+var demoSpectrumConfig = { type: "spectrum", size: 128};
+var fftConfig = demoWaveformConfig;
  
 function BufferLoader(context, urlList, callback) {
   this.context    = context;
@@ -30,7 +34,7 @@ function BufferLoader(context, urlList, callback) {
     xobj.open('GET', path, false);
     xobj.onreadystatechange = function () {
           console.log("on ready from geting " + path + " readystate: " + xobj.readyState + " and status: " + xobj.status);
-          if (xobj.readyState == 4 && xobj.status == 0) { // TODO: "200" when web-served.
+          if (xobj.readyState === 4 && xobj.status === 0) { // TODO: "200" when web-served.
             // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
             callback(xobj.responseText);
           }
@@ -82,7 +86,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts"];
-  var songDir    = songDirs[4];
+  var songDir    = songDirs[0];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -159,8 +163,18 @@ function createBuffer(b){
 
 function createGainedBuffer(b){
   var src = createBuffer(b);
+  var analyser = context.createAnalyser();
+  analyser.fftSize = fftConfig.size;
+  var bufferLength = analyser.frequencyBinCount;
+  var dataArray = new Uint8Array(bufferLength);
+
+  src.connect(analyser);
   var gainNode = linkThroughGain(src);
-  return {title: b, src: src, gainNode: gainNode};
+  return { title: b, 
+           src: src, 
+           gainNode: gainNode, 
+           analyser: analyser,
+           dataArray: dataArray };
 }
 
 function createAllBuffers(bufferList){
@@ -179,10 +193,12 @@ function makeControlsForTrack(buf, i) {
   var label      = $("<label/>", {text: simpleTrackName(i), title: trackNames[i]});//TODO: sanitise track names for security
   var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
   var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100", title: "Change volume of " + trackNames[i]});
-  
+  var canvas     = $("<canvas/>", {id: "trackCanvas" + i, width:'500', height:'100'});
+
   group.append(label);
   group.append(muteButton);
   group.append(slider);
+  group.append(canvas);
   $("#controlset").append(group);
 
   $('#vol'+i).on('change', function(e) { changeVolume(this); } );
@@ -268,6 +284,95 @@ function stop(){
   } );
  }
 
+function drawAllAnims(){
+  sourceAndGainPairs.forEach(function (pair, i) {
+    drawOneFFT(pair.analyser, pair.dataArray, i);
+  });
+
+  if (numFrames >= 0 ){
+    requestAnimationFrame(drawAllAnims);
+    numFrames += 1;
+  }
+}
+
+function drawOneFFT(analyser, dataArray, i){
+  var canvasElem = document.getElementById('trackCanvas'+i);
+
+  var canvasCtx = canvasElem.getContext('2d');
+  var canvasHeight = canvasElem.height;
+  var canvasWidth = canvasElem.width;
+
+  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+  canvasCtx.fillStyle = 'white';
+  canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+  
+  if (fftConfig.type === "spectrum") {
+    analyser.getByteFrequencyData(dataArray);
+  } else {
+    analyser.getByteTimeDomainData(dataArray);
+  }
+  
+
+  var len = dataArray.length;
+  var stripeWidth = canvasWidth / len;
+  var vertScale = canvasHeight / 256;
+  var scaledVals = [];
+  
+  for(var j = 0; j < len; j++) {
+    var val = dataArray[j] * vertScale;
+    scaledVals.push(val);
+  }  
+
+  if (fftConfig.type === "spectrum") {
+    drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight);
+  } else if (fftConfig.type === "waveform") {
+    if (signalAboveThreshold(dataArray)) {
+      drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight);
+    }
+  } else { // no fft
+
+  }
+}
+
+function signalAboveThreshold(arr){
+  var threshold = 10;
+  
+  for(var i = 0; i < arr.length; i+=1) {
+    var val = arr[i];
+    if (Math.abs(128 - val) > threshold) {
+      return true;
+    }
+  }
+  return false;
+
+}
+
+function drawSpectrum(canvasCtx, scaledVals, stripeWidth, w, h){
+  canvasCtx.fillStyle = 'rgb(255, 0, 0)';
+  scaledVals.forEach(function(v, i) { 
+    canvasCtx.fillRect(i*stripeWidth, h - v, stripeWidth, v);
+  });
+}
+
+function drawWaveform(canvasCtx, scaledVals, step, w, h){
+  canvasCtx.lineWidth = 4;
+  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+  canvasCtx.beginPath();
+  var x = 0;
+
+  scaledVals.forEach(function(v, i) { 
+    if(i === 0) {
+      canvasCtx.moveTo(x, v);
+    } else {
+      canvasCtx.lineTo(x, v);
+    }
+    x += step;
+    //canvasCtx.fillRect(j*stripeWidth, canvasHeight - v, stripeWidth, v);
+  });
+  canvasCtx.lineTo(w, h/2);
+  canvasCtx.stroke();
+}
+
 function play(){
   if (isPlaying){
     stop();
@@ -284,6 +389,8 @@ function play(){
   sourceAndGainPairs.forEach(function(pair) {
     pair.src.start(0, posOffset);
   } );
+  var drawVisual = requestAnimationFrame(drawAllAnims);
+
   isPlaying = true;
 }
 function setPlaybackRateForAllBuffers(r){
@@ -327,7 +434,6 @@ function jumpToSection(i) {
 }
 
 function recreateSectionStartsInDOM() {
-  console.log(sectionStarts);
   $('#snapshots').innertHTML = "";
 
   sectionStarts.forEach(function(s, i) {

@@ -1,12 +1,14 @@
-* allow mute buttons to be changed even when the gain nodes they affect are stale or non-existent.
+* volume changes on muted tracks should consult track mute state and only affect track gain if not muted.  
 
-* make a list of positions.
+*on creation/play, sync not only with mute states but volume sliders.
+
+* allow mute buttons to be changed even when the gain nodes they affect are stale or non-existent.
 
 * solo buttons for each part (radio button?)
 
-* click snapshot position to jump to that position
-
 * drop the overall gain when as more tracks are added.
+
+* visualise each track.
 
 maybe:
 =======
@@ -18,3 +20,7 @@ maybe:
 DONE:
 ======
 * re-apply mute-button states to sources once they've been re-created (e.g. on seek, pause, etc)
+
+* make a list of positions.
+
+* click snapshot position to jump to that position

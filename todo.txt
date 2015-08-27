@@ -10,6 +10,8 @@
 
 * visualise each track.
 
+* have waveform vis first look for first positive zero crossing, to try to keep a more stable window onto the waveform each frame.  e.g. http://webaudiodemos.appspot.com/oscilloscope/index.html
+
 * add a radix of 10 to calls to parseInt, to prevent leading zeros on numbers changing their base for interpretation.
 
 maybe:

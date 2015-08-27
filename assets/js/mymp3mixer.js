@@ -85,8 +85,8 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts"];
-  var songDir    = songDirs[1];
+  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few"];
+  var songDir    = songDirs[6];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -286,24 +286,36 @@ function stop(){
  }
 
 function drawAllAnims(){
+
+  var sharedCanvas = document.getElementById('trackCanvas'+0);
+  var canvasCtx = sharedCanvas.getContext('2d');
+  canvasCtx.fillStyle = 'white';
+  canvasCtx.fillRect(0, 0, sharedCanvas.width, sharedCanvas.height);
+
+  var h = sharedCanvas.height;
+  var oneYOffset = h / sourceAndGainPairs.length;
+
   sourceAndGainPairs.forEach(function (pair, i) {
-    drawOneFFT(pair.analyser, pair.dataArray, i);
+    var yOffset = -h/2 + i*oneYOffset;
+    drawOneFFT(pair.analyser, pair.dataArray, i);//, sharedCanvas, yOffset);
   });
 
   if (numFrames >= 0 ){
     requestAnimationFrame(drawAllAnims);
     numFrames += 1;
   }
+  
 }
 
-function drawOneFFT(analyser, dataArray, i){
-  var canvasElem = document.getElementById('trackCanvas'+i);
+function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset){
+  var canvasElem = sharedCanvas || document.getElementById('trackCanvas'+i);
 
   var canvasCtx = canvasElem.getContext('2d');
   var canvasHeight = canvasElem.height;
   var canvasWidth = canvasElem.width;
 
-  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+  yOffset = yOffset || 0;
+//  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
   canvasCtx.fillStyle = 'white';
   canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
   
@@ -325,10 +337,10 @@ function drawOneFFT(analyser, dataArray, i){
   }  
 
   if (fftConfig.type === "spectrum") {
-    drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight);
+    drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
   } else if (fftConfig.type === "waveform") {
     if (signalAboveThreshold(dataArray)) {
-      drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight);
+      drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
     }
   } else { // no fft
 
@@ -336,7 +348,7 @@ function drawOneFFT(analyser, dataArray, i){
 }
 
 function signalAboveThreshold(arr){
-  var threshold = 10;
+  var threshold = 3;
   
   for(var i = 0; i < arr.length; i+=1) {
     var val = arr[i];
@@ -348,24 +360,27 @@ function signalAboveThreshold(arr){
 
 }
 
-function drawSpectrum(canvasCtx, scaledVals, stripeWidth, w, h){
+function drawSpectrum(canvasCtx, scaledVals, stripeWidth, w, h, yOffset){
+  canvasCtx.globalAlpha = 0.5;
+
   canvasCtx.fillStyle = 'rgb(255, 0, 0)';
   scaledVals.forEach(function(v, i) { 
-    canvasCtx.fillRect(i*stripeWidth, h - v, stripeWidth, v);
+    canvasCtx.fillRect(i*stripeWidth, h - v + yOffset, stripeWidth, v);
   });
 }
 
-function drawWaveform(canvasCtx, scaledVals, step, w, h){
+function drawWaveform(canvasCtx, scaledVals, step, w, h, yOffset){
   canvasCtx.lineWidth = 3;
   canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
   canvasCtx.beginPath();
   var x = 0;
 
   scaledVals.forEach(function(v, i) { 
+    var y = v + yOffset;
     if(i === 0) {
-      canvasCtx.moveTo(x, v);
+      canvasCtx.moveTo(x, y);
     } else {
-      canvasCtx.lineTo(x, v);
+      canvasCtx.lineTo(x, y);
     }
     x += step;
   });

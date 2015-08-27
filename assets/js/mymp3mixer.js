@@ -86,7 +86,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts"];
-  var songDir    = songDirs[0];
+  var songDir    = songDirs[1];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -168,8 +168,9 @@ function createGainedBuffer(b){
   var bufferLength = analyser.frequencyBinCount;
   var dataArray = new Uint8Array(bufferLength);
 
-  src.connect(analyser);
   var gainNode = linkThroughGain(src);
+  gainNode.connect(analyser);
+
   return { title: b, 
            src: src, 
            gainNode: gainNode, 
@@ -355,7 +356,7 @@ function drawSpectrum(canvasCtx, scaledVals, stripeWidth, w, h){
 }
 
 function drawWaveform(canvasCtx, scaledVals, step, w, h){
-  canvasCtx.lineWidth = 4;
+  canvasCtx.lineWidth = 3;
   canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
   canvasCtx.beginPath();
   var x = 0;
@@ -367,9 +368,7 @@ function drawWaveform(canvasCtx, scaledVals, step, w, h){
       canvasCtx.lineTo(x, v);
     }
     x += step;
-    //canvasCtx.fillRect(j*stripeWidth, canvasHeight - v, stripeWidth, v);
   });
-  canvasCtx.lineTo(w, h/2);
   canvasCtx.stroke();
 }
 

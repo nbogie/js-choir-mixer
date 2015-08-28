@@ -1,0 +1,33 @@
+Solo'ing vs muting
+
+Do the simplest thing that could work
+
+
+When a solo button is toggled ON:
+  * If there is already a solo group existing, the track joins it and is completely unmuted.
+  * If there is no solo group existing: 
+      * a solo group is made
+      * the track is added to it
+      * all other non-muted tracks are "muted-for-solo"
+
+When a solo button is toggled OFF:
+  * If it is the last track in the solo group, the solo group is disbanded, and all other tracks which were "muted-for-solo" are cleared of that status (they may remain "muted").
+  * If it is not the last track in the group, the track is removed from the group and is "muted-for-solo".
+
+What happens when a mute button is toggled ON when there is a solo in progress?
+ - if the track is part of the solo group?     - ignored
+ - if the track is not part of the solo group? - ignored
+What happens when a mute button is toggled OFF when there is a solo in progress?
+ - if the track is part of the solo group?     - ignored
+ - if the track is not part of the solo group? - ignored
+
+Solo'ing status must resume on stop, play, play from point, etc.
+
+
+The volume of a track considers: 
+  isMuted && isMutedForSolo
+
+
+Impl notes:
+
+"soloGroup" can be represented in the DOM by those tracks which have their solo button set to class solobutton-on.

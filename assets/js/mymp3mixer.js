@@ -18,7 +18,9 @@ var playbackRate;
 var demoWaveformConfig = { type: "waveform", size: 1024};
 var demoSpectrumConfig = { type: "spectrum", size: 128};
 var fftConfig = demoWaveformConfig;
- 
+var useZeroCrossing;
+
+
 function BufferLoader(context, urlList, callback) {
   this.context    = context;
   this.urlList    = urlList;
@@ -86,7 +88,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few"];
-  var songDir    = songDirs[6];
+  var songDir    = songDirs[3];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -94,8 +96,8 @@ function initmp3mixer() {
     trackNames = json.tracks.map(function(t) { return t.name; });
     sectionStarts = json.sectionStarts || [];
     playbackRate = 1;
+    useZeroCrossing = true;
     recreateSectionStartsInDOM();
-    console.log(json);
   });
   
   context      = new AudioContext();
@@ -307,6 +309,50 @@ function drawAllAnims(){
   
 }
 
+var MINVAL = 134;  // 128 == zero.  MINVAL is the "minimum detected signal" level.
+
+
+function findFirstPositiveZeroCrossing(buf, buflen) {
+  var i = 0;
+  var last_zero = -1;
+  var t;
+
+  // advance until we're zero or negative
+  while (i<buflen && (buf[i] > 128 ) ){
+    i++;
+  }
+
+  if (i>=buflen){
+    return 0;
+  }
+  // advance until we're above MINVAL, keeping track of last zero.
+  while (i<buflen && ((t=buf[i]) < MINVAL )) {
+    if (t >= 128) {
+      if (last_zero === -1){
+        last_zero = i;
+      }
+    } else {
+      last_zero = -1;
+    }
+    i++;
+  }
+
+  // we may have jumped over MINVAL in one sample.
+  if (last_zero === -1) {
+    last_zero = i;
+  }
+
+  if (i==buflen) { // We didn't find any positive zero crossings
+    return 0;
+  }
+
+  // The first sample might be a zero.  If so, return it.
+  if (last_zero === 0) {
+    return 0;
+  }
+
+  return last_zero;
+}
 function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset){
   var canvasElem = sharedCanvas || document.getElementById('trackCanvas'+i);
 
@@ -340,7 +386,12 @@ function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset){
     drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
   } else if (fftConfig.type === "waveform") {
     if (signalAboveThreshold(dataArray)) {
-      drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
+      if(useZeroCrossing) {
+        var zeroCross = findFirstPositiveZeroCrossing(dataArray, canvasWidth);
+        drawWaveformAtZeroCrossing(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset, zeroCross);
+      } else {
+        drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
+      }
     }
   } else { // no fft
 
@@ -384,6 +435,23 @@ function drawWaveform(canvasCtx, scaledVals, step, w, h, yOffset){
     }
     x += step;
   });
+  canvasCtx.stroke();
+}
+
+
+function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, zeroCross){
+
+  canvasCtx.lineWidth = 3;
+  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+  canvasCtx.beginPath();
+
+  var scaling = h / 256;
+  canvasCtx.moveTo(0,scaledVals[zeroCross]);
+
+  for (var i=zeroCross, j=0; (j<w)&&(i<scaledVals.length); i++, j++){
+    canvasCtx.lineTo(j, (scaledVals[i]));
+  }
+    
   canvasCtx.stroke();
 }
 

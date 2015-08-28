@@ -1,5 +1,9 @@
 Notes:
 
+* uses some code from 
+http://webaudiodemos.appspot.com/oscilloscope/index.html
+to detect first positive zero-crossing of the waveform, in order to try to display a stable wave.
+
 "For longer sounds, such as music soundtracks, streaming should be used with the audio element and MediaElementAudioSourceNode." - http://www.w3.org/TR/webaudio/#AudioContext-section
 
 Section loops could be implemented using the existing loop, loopStart, loopEnd parameters in start().  "the AudioBuffer is at a specific sample-rate (usually the same as the AudioContext sample-rate), and that the loop times (in seconds) must be converted to the appropriate sample-frame positions in the buffer according to this sample-rate." - http://www.w3.org/TR/webaudio/#looping-AudioBufferSourceNode

@@ -8,6 +8,8 @@ var sectionStarts;
 var songTitle;
 var numFrames = 0;
 
+var soloGroup;
+
 var isPlaying; //Fixme: ask the API, instead
 
 var posOffset = 0;
@@ -29,21 +31,21 @@ function BufferLoader(context, urlList, callback) {
   this.loadCount  = 0;
 }
 
- function loadJSONSync(path, callback) {   
+function loadJSONSync(path, callback) {   
 
-    var xobj = new XMLHttpRequest();
-        xobj.overrideMimeType("application/json");
-    xobj.open('GET', path, false);
-    xobj.onreadystatechange = function () {
-          console.log("on ready from geting " + path + " readystate: " + xobj.readyState + " and status: " + xobj.status);
-          if (xobj.readyState === 4 && xobj.status === 0) { // TODO: "200" when web-served.
-            // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-            callback(xobj.responseText);
-          }
-    };
-    xobj.send(null);  
- }
- 
+  var xobj = new XMLHttpRequest();
+  xobj.overrideMimeType("application/json");
+  xobj.open('GET', path, false);
+  xobj.onreadystatechange = function () {
+    console.log("on ready from geting " + path + " readystate: " + xobj.readyState + " and status: " + xobj.status);
+    if (xobj.readyState === 4 && xobj.status === 0) { // TODO: "200" when web-served.
+      // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
+      callback(xobj.responseText);
+    }
+  };
+  xobj.send(null);  
+}
+
 BufferLoader.prototype.loadBuffer = function(url, index) {
   // Load buffer asynchronously
   var request = new XMLHttpRequest();
@@ -79,8 +81,9 @@ BufferLoader.prototype.loadBuffer = function(url, index) {
 };
 
 BufferLoader.prototype.load = function() {
-  for (var i = 0; i < this.urlList.length; ++i)
-  this.loadBuffer(this.urlList[i], i);
+  for (var i = 0; i < this.urlList.length; ++i) {
+    this.loadBuffer(this.urlList[i], i);
+  }
 };
 
 function initmp3mixer() {
@@ -88,7 +91,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few"];
-  var songDir    = songDirs[3];
+  var songDir    = songDirs[5];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -99,7 +102,8 @@ function initmp3mixer() {
     useZeroCrossing = true;
     recreateSectionStartsInDOM();
   });
-  
+  soloGroup = [];
+
   context      = new AudioContext();
   isPlaying    = false;
   bufferLoader = new BufferLoader(
@@ -120,7 +124,111 @@ function getTrailingDigit(elem,prefix) {
   return parseInt(numstr);
 }
 
-function toggleMute(elem) {
+function getAllTrackIdsExcept(n) {
+  var arr = getAllTrackIds();
+  removeFromArray(arr, n);
+  return arr;
+}
+
+//modifies the given array
+function removeFromArray(arr, o){
+  var i = arr.indexOf(o);
+  arr.splice(i, 1);
+}
+
+function getAllTrackIds() {
+  var n = sourceAndGainPairs.length;
+  var ids = [];
+  for(var i = 0; i < n; i++) {
+    ids.push(i);
+  }
+  return ids;
+}
+
+function getAllNonSoloTrackIds() {
+  var all = getAllTrackIds();
+  return all.filter(function(i) { 
+    return (soloGroup.indexOf(i) < 0);
+  });
+}
+
+function tempMuteTrack(n) {
+  var elem = $('#mute'+n);
+  elem.addClass('mutebutton-muted-for-solo');
+  setTrackGain(n, 0);
+}
+
+function setTrackGain(n, g) {
+  var pair = sourceAndGainPairs[n];
+  pair.gainNode.gain.cancelScheduledValues(context);
+  pair.gainNode.gain.value = g;
+}
+
+function handleSoloButton(elem) {
+  console.log("Toggling solo on elem: " + elem.id);
+  var n    = getTrailingDigit(elem, "solo");
+  if (soloGroup.indexOf(n) < 0) {
+    toggleSoloOn(elem, n);
+  } else {
+    toggleSoloOff(elem, n);
+  }
+  elem.classList.toggle("solobutton-on");
+}
+
+function toggleSoloOff(elem, n) {
+  console.log("toggle solo off for " + n);
+  if(soloGroup.length < 2){
+    console.log("solo group ending");
+    
+    //unmute everything that has been muted-for-solo
+    var toUnmute = getAllNonSoloTrackIds();
+    console.log("non-solo tracks: " + toUnmute);
+    toUnmute.forEach(function(i) {
+      tempUnmuteTrack(i);
+    });
+  } else {
+    tempMuteTrack(n);
+  }
+  removeFromArray(soloGroup, n);
+}
+
+function tempUnmuteTrack(i){
+  console.log('temp unmuting ' + i);
+  var elem = $('#mute'+i);
+  elem.removeClass('mutebutton-muted-for-solo');
+  setTrackGainUsingSliderAndMute(i);
+}
+
+function trackIsMutedOrTempMuted(i) {
+  var mb = $('#mute'+i);
+  return ( mb.hasClass('mutebutton-muted') || 
+           mb.hasClass('mutebutton-muted-for-solo') );
+}
+
+  
+function setTrackGainUsingSliderAndMute(i) {
+  if (trackIsMutedOrTempMuted(i)) {
+    console.log("track "+ i + " is some sort of muted.  set to 0");
+    setTrackGain(i,0);
+  } else {
+    //TODO: implement
+    console.log("UNIMPLEMENTED: set track gain to slider value");
+    setTrackGain(i, 1);
+  }
+}
+function toggleSoloOn(elem, n) {
+  if (soloGroup.length > 0) {
+    console.log("adding " + n + " to existing solo group with " + soloGroup);
+    tempUnmuteTrack(n);
+  } else {
+    var otherIds = getAllTrackIdsExcept(n);
+    console.log("starting new solo group with " + n + " and temp-muting "+ otherIds);
+    otherIds.forEach(tempMuteTrack);
+  }
+  soloGroup.push(n);
+}
+
+function handleMuteButton(elem) {
   console.log("Toggling mute on elem: " + elem.id);
   var n    = getTrailingDigit(elem, "mute");
   var pair = sourceAndGainPairs[n];
@@ -137,22 +245,16 @@ function toggleMute(elem) {
 }
 
 function muteTracksAccordingToDOM() {
-  $( ".mutebutton-muted").each(function(index) {
+  $(".mutebutton-muted").add(".mutebutton-muted-for-solo").each(function(index) {
     var elem = this;
     var n    = getTrailingDigit(elem, "mute");
-    var pair = sourceAndGainPairs[n];
-    pair.gainNode.gain.cancelScheduledValues(context);
-    if (elem.classList.contains("mutebutton-muted")) {
-      pair.gainNode.gain.value = 0;
-    } else {
-      pair.gainNode.gain.value = 1;
-    }
+    setTrackGain(n, 0);
   });
-
 }
+
 function gainTracksAccordingToDOM() {
   $(".slider").each(function(index) {
-    changeVolume(this);
+    handleChangeVolumeSlider(this);
   });
 }
 
@@ -178,9 +280,9 @@ function createGainedBuffer(b){
            gainNode: gainNode, 
            analyser: analyser,
            dataArray: dataArray };
-}
+ }
 
-function createAllBuffers(bufferList){
+ function createAllBuffers(bufferList){
   sourceAndGainPairs = bufferList.map(function (buf) { 
     return createGainedBuffer(buf);
   });
@@ -195,17 +297,20 @@ function makeControlsForTrack(buf, i) {
   var group      = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
   var label      = $("<label/>", {text: simpleTrackName(i), title: trackNames[i]});//TODO: sanitise track names for security
   var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
+  var soloButton = $("<input/>", {type: "submit", id: "solo" + i, value: "Solo", class: "solobutton"});
   var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100", title: "Change volume of " + trackNames[i]});
   var canvas     = $("<canvas/>", {id: "trackCanvas" + i, width:'500', height:'100'});
 
   group.append(label);
   group.append(muteButton);
+  group.append(soloButton);
   group.append(slider);
   group.append(canvas);
   $("#controlset").append(group);
 
-  $('#vol'+i).on('change', function(e) { changeVolume(this); } );
-  $('#mute'+i).on('click', function(e) { toggleMute(this); });
+  $('#vol'+i).on('change', function(e) { handleChangeVolumeSlider(this); } );
+  $('#mute'+i).on('click', function(e) { handleMuteButton(this); });
+  $('#solo'+i).on('click', function(e) { handleSoloButton(this); });
   
 }
 
@@ -237,7 +342,7 @@ function linkThroughGain(src){
   return gainNode;
 }
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
-function changeVolume(elem){
+function handleChangeVolumeSlider(elem){
   //TODO: volume changes while no buffers loaded must be allowed, and must persist when buffers are reloaded (e.g. play position changed and all recreated).
   // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
 
@@ -246,7 +351,7 @@ function changeVolume(elem){
   var val    = parseInt(elem.value);
   
   var pair = sourceAndGainPairs[num];
-  console.log("changeVolume "+ elem.id + " num: "+ num +" val: " + elem.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
+  console.log("handleChangeVolumeSlider "+ elem.id + " num: "+ num +" val: " + elem.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
   
   var gainNode        = pair.gainNode;
   gainNode.gain.value = val/100.0;
@@ -255,7 +360,6 @@ function changeVolume(elem){
 function lengthOfSourceInSec(){
   return sourceAndGainPairs[0].src.buffer.duration;
 }
-
 
 function handleChangePosition(elem){
   updatePosOffset(convertSliderValueToSeconds(elem));
@@ -281,11 +385,11 @@ function stop(){
     wipeAllBuffers();
   }
 }
- function setAllBuffersToLoop(shouldLoop) {
+function setAllBuffersToLoop(shouldLoop) {
   sourceAndGainPairs.forEach(function(pair) {
     pair.src.loop = shouldLoop;
   } );
- }
+}
 
 function drawAllAnims(){
 
@@ -300,7 +404,7 @@ function drawAllAnims(){
   sourceAndGainPairs.forEach(function (pair, i) {
     var yOffset = -h/2 + i*oneYOffset;
     drawOneFFT(pair.analyser, pair.dataArray, i);//, sharedCanvas, yOffset);
-  });
+});
 
   if (numFrames >= 0 ){
     requestAnimationFrame(drawAllAnims);
@@ -344,7 +448,7 @@ function findFirstPositiveZeroCrossing(buf, buflen) {
 
   if (i==buflen) { // We didn't find any positive zero crossings
     return 0;
-  }
+}
 
   // The first sample might be a zero.  If so, return it.
   if (last_zero === 0) {
@@ -361,16 +465,16 @@ function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset){
   var canvasWidth = canvasElem.width;
 
   yOffset = yOffset || 0;
-//  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+  //  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
   canvasCtx.fillStyle = 'white';
   canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-  
+
   if (fftConfig.type === "spectrum") {
     analyser.getByteFrequencyData(dataArray);
   } else {
     analyser.getByteTimeDomainData(dataArray);
   }
-  
+
 
   var len = dataArray.length;
   var stripeWidth = canvasWidth / len;
@@ -451,7 +555,7 @@ function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, 
   for (var i=zeroCross, j=0; (j<w)&&(i<scaledVals.length); i++, j++){
     canvasCtx.lineTo(j, (scaledVals[i]));
   }
-    
+
   canvasCtx.stroke();
 }
 

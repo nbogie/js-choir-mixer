@@ -91,7 +91,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few"];
-  var songDir    = songDirs[5];
+  var songDir    = songDirs[0];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -193,7 +193,6 @@ function toggleSoloOff(elem, n) {
 }
 
 function tempUnmuteTrack(i){
-  console.log('temp unmuting ' + i);
   var elem = $('#mute'+i);
   elem.removeClass('mutebutton-muted-for-solo');
   setTrackGainUsingSliderAndMute(i);
@@ -205,15 +204,16 @@ function trackIsMutedOrTempMuted(i) {
            mb.hasClass('mutebutton-muted-for-solo') );
 }
 
-  
+function setTrackGainUsingSlider(i) {
+    var g = getVolumeSliderValueForTrack(i);
+    setTrackGain(i, g);
+}
+
 function setTrackGainUsingSliderAndMute(i) {
   if (trackIsMutedOrTempMuted(i)) {
-    console.log("track "+ i + " is some sort of muted.  set to 0");
     setTrackGain(i,0);
-  } else {
-    //TODO: implement
-    console.log("UNIMPLEMENTED: set track gain to slider value");
-    setTrackGain(i, 1);
+  } else {    
+    setTrackGainUsingSlider(i);
   }
 }
 function toggleSoloOn(elem, n) {
@@ -234,28 +234,19 @@ function handleMuteButton(elem) {
   var pair = sourceAndGainPairs[n];
   pair.gainNode.gain.cancelScheduledValues(context);
   console.log("before: " + pair.gainNode.gain.value + " and classes " + elem.classList);
+  
   if (elem.classList.contains("mutebutton-muted")) {
-    pair.gainNode.gain.value = 1;
+    if(!elem.classList.contains("mutebutton-muted-for-solo")) {
+      setTrackGainUsingSlider(n);
+    } else {
+      //still muted for solo
+    }
   } else {
+    //wasn't muted.  mute it.
     pair.gainNode.gain.value = 0;
   }  
   elem.classList.toggle("mutebutton-muted");
   console.log("after: " + pair.gainNode.gain.value + " and classes " + elem.classList);
-
-}
-
-function muteTracksAccordingToDOM() {
-  $(".mutebutton-muted").add(".mutebutton-muted-for-solo").each(function(index) {
-    var elem = this;
-    var n    = getTrailingDigit(elem, "mute");
-    setTrackGain(n, 0);
-  });
-}
-
-function gainTracksAccordingToDOM() {
-  $(".slider").each(function(index) {
-    handleChangeVolumeSlider(this);
-  });
 }
 
 function createBuffer(b){
@@ -341,20 +332,25 @@ function linkThroughGain(src){
   gainNode.gain.value = 1;
   return gainNode;
 }
+
+function getVolumeSliderValueForTrack(i) {
+  return getVolumeSliderValueFrom0To1($('#vol' + i).get()[0]);
+}
+
+function getVolumeSliderValueFrom0To1(elem){
+  return (parseFloat(elem.value) / 100);
+}
+
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
 function handleChangeVolumeSlider(elem){
   //TODO: volume changes while no buffers loaded must be allowed, and must persist when buffers are reloaded (e.g. play position changed and all recreated).
   // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
-
-  var numstr = elem.id.substring(3,4);
-  var num    = parseInt(numstr);
-  var val    = parseInt(elem.value);
-  
-  var pair = sourceAndGainPairs[num];
-  console.log("handleChangeVolumeSlider "+ elem.id + " num: "+ num +" val: " + elem.value + " value: " + val + " and val is " + val + " and that pair is " + pair);
-  
-  var gainNode        = pair.gainNode;
-  gainNode.gain.value = val/100.0;
+  var i = getTrailingDigit(elem, "vol");  
+  if (!trackIsMutedOrTempMuted(i)) {
+    var g = getVolumeSliderValueFrom0To1(elem);
+    setTrackGain(i, g);
+    console.log("handleChangeVolumeSlider "+ elem.id + " i: "+ i +" val: " + elem.value);  
+  }
 }
 
 function lengthOfSourceInSec(){
@@ -480,7 +476,7 @@ function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset){
   var stripeWidth = canvasWidth / len;
   var vertScale = canvasHeight / 256;
   var scaledVals = [];
-  
+
   for(var j = 0; j < len; j++) {
     var val = dataArray[j] * vertScale;
     scaledVals.push(val);
@@ -567,8 +563,10 @@ function play(){
   createAllBuffers(gBufferList);
   setAllBuffersToLoop(true);
   setPlaybackRateForAllBuffers(playbackRate);
-  gainTracksAccordingToDOM();
-  muteTracksAccordingToDOM();
+  
+  getAllTrackIds().forEach(function(i) {
+    setTrackGainUsingSliderAndMute(i);
+  });
   
   playStartedTime = context.currentTime;
   playStartedOffset = posOffset;

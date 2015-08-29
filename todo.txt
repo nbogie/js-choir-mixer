@@ -1,4 +1,10 @@
+* TODO: be sure that no intended-to-be-deleted nodes are being held onto through the lifetime of the app, e.g. referenced elsewhere.
+
 * don't dispose of the graph on stop() (at most, get rid of the buffersource nodes).  This will allow volume sliders and mute buttons to when nothing is playing.
+
+* when pressing stop multiple times, don't replace perfectly good source nodes.
+
+* consider using averaging to smooth waveforms
 
 * volume changes on muted tracks should consult track mute state and only affect track gain if not muted.  
 

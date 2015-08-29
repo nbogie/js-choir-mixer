@@ -19,3 +19,5 @@ A self-closed script tag <script src="foo.js" /> will cause silent failure.
 Forgetting to return something an a list.map(function(elem)) { elem; }); will give you null back instead of a "collected" list.
 
 Adding padding to an element will make its hit rectangle bigger even if it is not visibly being padded, and may have that element handle clicks for other elements EVEN though the user appears to be clearly clicking on the other elems.  E.g. I had a span element with padding 20px inside an li, and the li had a click handler.  I created a list of these.  Clicks on the higher ones were being intercepted by the lower ones (those created later, I suppose).
+
+"When oscillatorL stops playing, it gets disconnected from mergerNode and deleted. The browser is allowed to do this because – as you recall – an OscillatorNode or AudioBufferSourceNode can only be used once, so after we call oscillatorL.stop(), oscillatorL becomes unusable." - http://blog.szynalski.com/2014/04/02/web-audio-api/

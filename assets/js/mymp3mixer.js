@@ -91,7 +91,7 @@ function initmp3mixer() {
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few"];
-  var songDir    = songDirs[0];
+  var songDir    = songDirs[3];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -273,6 +273,22 @@ function createGainedSourceOnBuffer(b){
            dataArray: dataArray };
  }
 
+function replaceAllSourceNodes(bufferList){
+  sourceAndGainPairs.forEach(function (pair) { 
+    replaceSourceNode(pair);
+  });
+}
+
+function replaceSourceNode(pair) {
+  var oldSrc = pair.src;
+  var newSrc = createSourceOnBuffer(oldSrc.buffer);
+  //TODO: copy any other relevant info from the old source node.
+  newSrc.playbackRate.value = oldSrc.playbackRate.value;
+  oldSrc.disconnect();
+  newSrc.connect(pair.gainNode);
+  pair.src = newSrc;  //this also drops the handle to the oldSrc.
+}
+
  function createAllGainedSourcesOnBuffers(bufferList){
   sourceAndGainPairs = bufferList.map(function (buf) { 
     return createGainedSourceOnBuffer(buf);
@@ -312,20 +328,14 @@ function createControlsInDOM(bufferList) {
   $('#positionSlider').on('input', function(e) { handleChangePosition(this); } );
   $('#playbackRateSlider').on('input', function(e) { handleChangePlaybackRate(this); } );
   $('#playButton').on('click', function(e) { play(); } );
-  $('#stopButton').on('click', function(e) { stopAndDestroyAll(); } );
+  $('#stopButton').on('click', function(e) { stopAndReplaceSourceNodesIfPlaying(); } );
   $('#snapshotButton').on('click', function(e) { snapshotTime(); } );
 }
 
 function finishedLoading(bufferList) {
   gBufferList = bufferList;
-  // Create three sources and play them both together.
   createAllGainedSourcesOnBuffers(bufferList);
   createControlsInDOM(bufferList);
-
-  //play();
-}
-function wipeAllNodes(){
-  sourceAndGainPairs = [];
 }
 
 function linkThroughGain(src){
@@ -371,17 +381,19 @@ function convertSliderValueToSeconds(elem){
   return Math.round(lengthOfFirstBufferInSec() * parseFloat(elem.value) / parseInt(elem.max));
 }
 
-function stopAndDestroyAll(){
-  playStartedTime = -1;
-  var firstSource = sourceAndGainPairs[0].src;
-  if(firstSource !== null){
-    sourceAndGainPairs.forEach(function(pair) {
-      if (pair.src !== null) {
-        pair.src.stop(0);
-      }
-    } );
-    isPlaying = false;
-    wipeAllNodes();
+function stopAndReplaceSourceNodesIfPlaying(){
+  if (isPlaying) {
+    playStartedTime = -1;
+    var firstSource = sourceAndGainPairs[0].src;
+    if(firstSource !== null){
+      sourceAndGainPairs.forEach(function(pair) {
+        if (pair.src !== null) {
+          pair.src.stop(0);
+        }
+      } );
+      isPlaying = false;
+      replaceAllSourceNodes();
+    }
   }
 }
 function setAllSourcesToLoop(shouldLoop) {
@@ -559,11 +571,9 @@ function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, 
 }
 
 function play(){
-  if (isPlaying){
-    stopAndDestroyAll();
-    isPlaying = false;    
-  }
-  createAllGainedSourcesOnBuffers(gBufferList);
+  stopAndReplaceSourceNodesIfPlaying();
+  
+  //TODO: set up these in the right place.
   setAllSourcesToLoop(true);
   setPlaybackRateForAllSources(playbackRate);
   

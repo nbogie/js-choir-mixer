@@ -249,15 +249,15 @@ function handleMuteButton(elem) {
   console.log("after: " + pair.gainNode.gain.value + " and classes " + elem.classList);
 }
 
-function createBuffer(b){
+function createSourceOnBuffer(b){
   var src = context.createBufferSource();
   src.playbackRate.value = 1;
   src.buffer = b;
   return src;
 }
 
-function createGainedBuffer(b){
-  var src = createBuffer(b);
+function createGainedSourceOnBuffer(b){
+  var src = createSourceOnBuffer(b);
   var analyser = context.createAnalyser();
   analyser.fftSize = fftConfig.size;
   var bufferLength = analyser.frequencyBinCount;
@@ -273,9 +273,9 @@ function createGainedBuffer(b){
            dataArray: dataArray };
  }
 
- function createAllBuffers(bufferList){
+ function createAllGainedSourcesOnBuffers(bufferList){
   sourceAndGainPairs = bufferList.map(function (buf) { 
-    return createGainedBuffer(buf);
+    return createGainedSourceOnBuffer(buf);
   });
 }
 function simpleTrackName(i){
@@ -319,12 +319,12 @@ function createControlsInDOM(bufferList) {
 function finishedLoading(bufferList) {
   gBufferList = bufferList;
   // Create three sources and play them both together.
-  createAllBuffers(bufferList);
+  createAllGainedSourcesOnBuffers(bufferList);
   createControlsInDOM(bufferList);
 
   //play();
 }
-function wipeAllBuffers(){
+function wipeAllNodes(){
   sourceAndGainPairs = [];
 }
 
@@ -346,7 +346,7 @@ function getVolumeSliderValueFrom0To1(elem){
 
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
 function handleChangeVolumeSlider(elem){
-  //TODO: volume changes while no buffers loaded must be allowed, and must persist when buffers are reloaded (e.g. play position changed and all recreated).
+  //TODO: volume changes while no sources loaded must be allowed, and must persist when sources are reloaded (e.g. play position changed and all recreated).
   // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
   var i = getTrailingDigit(elem, "vol");  
   if (!trackIsMutedOrTempMuted(i)) {
@@ -356,7 +356,7 @@ function handleChangeVolumeSlider(elem){
   }
 }
 
-function lengthOfSourceInSec(){
+function lengthOfFirstBufferInSec(){
   return sourceAndGainPairs[0].src.buffer.duration;
 }
 
@@ -368,7 +368,7 @@ function handleChangePlaybackRate(elem){
 }
 
 function convertSliderValueToSeconds(elem){
-  return Math.round(lengthOfSourceInSec() * parseFloat(elem.value) / parseInt(elem.max));
+  return Math.round(lengthOfFirstBufferInSec() * parseFloat(elem.value) / parseInt(elem.max));
 }
 
 function stopAndDestroyAll(){
@@ -381,10 +381,10 @@ function stopAndDestroyAll(){
       }
     } );
     isPlaying = false;
-    wipeAllBuffers();
+    wipeAllNodes();
   }
 }
-function setAllBuffersToLoop(shouldLoop) {
+function setAllSourcesToLoop(shouldLoop) {
   sourceAndGainPairs.forEach(function(pair) {
     pair.src.loop = shouldLoop;
   } );
@@ -563,9 +563,9 @@ function play(){
     stopAndDestroyAll();
     isPlaying = false;    
   }
-  createAllBuffers(gBufferList);
-  setAllBuffersToLoop(true);
-  setPlaybackRateForAllBuffers(playbackRate);
+  createAllGainedSourcesOnBuffers(gBufferList);
+  setAllSourcesToLoop(true);
+  setPlaybackRateForAllSources(playbackRate);
   
   getAllTrackIds().forEach(function(i) {
     setTrackGainUsingSliderAndMute(i);
@@ -580,7 +580,7 @@ function play(){
 
   isPlaying = true;
 }
-function setPlaybackRateForAllBuffers(r){
+function setPlaybackRateForAllSources(r){
   sourceAndGainPairs.forEach(function(pair) {
     pair.src.playbackRate.value = r;
   } );

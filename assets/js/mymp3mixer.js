@@ -368,7 +368,7 @@ function convertSliderValueToSeconds(elem){
   return Math.round(lengthOfSourceInSec() * parseFloat(elem.value) / parseInt(elem.max));
 }
 
-function stop(){
+function stopAndDestroyAll(){
   playStartedTime = -1;
   var firstSource = sourceAndGainPairs[0].src;
   if(firstSource !== null){
@@ -557,7 +557,7 @@ function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, 
 
 function play(){
   if (isPlaying){
-    stop();
+    stopAndDestroyAll();
     isPlaying = false;    
   }
   createAllBuffers(gBufferList);

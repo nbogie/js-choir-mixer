@@ -1,3 +1,5 @@
+* don't dispose of the graph on stop() (at most, get rid of the buffersource nodes).  This will allow volume sliders and mute buttons to when nothing is playing.
+
 * volume changes on muted tracks should consult track mute state and only affect track gain if not muted.  
 
 *on creation/play, sync not only with mute states but volume sliders.
@@ -16,6 +18,8 @@
 
 maybe:
 =======
+
+* allow track streaming from soundcloud, and auto-load multiple tracks from there if a numbering scheme is detected. ("Foosong - 1 - tenor", "Foosong - 2 - alto", "Foosong - 3 - soprano")
 
 * advance the position slider while the piece plays?
 

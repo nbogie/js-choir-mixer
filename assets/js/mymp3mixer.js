@@ -311,6 +311,9 @@ function createControlsInDOM(bufferList) {
   });
   $('#positionSlider').on('input', function(e) { handleChangePosition(this); } );
   $('#playbackRateSlider').on('input', function(e) { handleChangePlaybackRate(this); } );
+  $('#playButton').on('click', function(e) { play(); } );
+  $('#stopButton').on('click', function(e) { stopAndDestroyAll(); } );
+  $('#snapshotButton').on('click', function(e) { snapshotTime(); } );
 }
 
 function finishedLoading(bufferList) {

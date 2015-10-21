@@ -1,0 +1,33 @@
+{  
+   "title":"Good News - Spirituals",
+   "tracks":[  
+      {  
+         "name":"soprano.mp3"
+      },
+      {  
+         "name":"alto1.mp3"
+      },
+      {  
+         "name":"alto2.mp3"
+      },
+      {  
+         "name":"tenor1.mp3"
+      },
+      {  
+         "name":"tenor2.mp3"
+      }
+   ],
+   "sectionStarts": [
+      {"time":18,"label":"good news - 3 pt"},
+      {"time":36,"label":"verse 1"},
+      {"time":40,"label":"verse 1 - 3 pt"},
+      {"time":54,"label":"chorus 2"},
+      {"time":72,"label":"verse 2"},
+      {"time":84,"label":"starry crown - last"},
+      {"time":96,"label":"chorus 3"},
+      {"time":117,"label":"verse 3 - golden harp"},
+      {"time":137,"label":"chorus 4"},
+      {"time":150,"label":"outro - start"},
+      {"time":163,"label":"outro - chariots are coming!"}
+      ]
+}

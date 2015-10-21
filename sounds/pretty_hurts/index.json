@@ -1,0 +1,22 @@
+{  
+   "title":"Pretty Hurts - Beyonce",
+   "tracks":[  
+      {  
+         "name":"soprano.mp3"
+      },
+      {  
+         "name":"alto.mp3"
+      },
+      {  
+         "name":"tenor.mp3"
+      }
+   ],
+   "sectionStarts": [
+      {"time": 15, "label": "verse1"},
+      {"time": 43, "label": "chorus"},
+      {"time": 74, "label": "verse2"},
+      {"time": 90, "label": "prechorus2"},
+      {"time": 134, "label": "rap verse1"},
+      {"time": 148, "label": "rap verse2"}
+   ]
+}

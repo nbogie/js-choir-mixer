@@ -1,0 +1,39 @@
+{  
+   "title":"Africa - Toto",
+   "tracks":[  
+      {  
+         "name":"alto-and-soprano.mp3"
+      },
+      {  
+         "name":"tenor.mp3"
+      }
+   ],
+   "sectionStarts":[
+     {
+       "time": 30.7,
+       "label": "v1"
+     },
+     {
+       "time": 67,
+       "label": "first split"
+     },
+     {
+       "time": 75,
+       "label": "chorus 1"
+     },
+     {
+       "time": 108,
+       "label": "v2 wild dogs"
+     },
+     {
+       "time": 143,
+       "label": "chorus 2"
+     },
+     {
+       "time": 175,
+       "label": "v3 old man2"
+     }
+   ]
+}
+
+

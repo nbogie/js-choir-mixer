@@ -90,8 +90,8 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few"];
-  var songDir    = songDirs[0];
+  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few", "good_news", "africa"];
+  var songDir    = songDirs[8];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);
@@ -116,6 +116,12 @@ function initmp3mixer() {
 
   bufferLoader.load();
   document.getElementById("songTitle").innerHTML = songTitle;
+  
+  window.setInterval(function() { 
+    var e = document.getElementById("positionMonitor");
+    e.value = computeCurrentTrackTime().toFixed(1);
+  }, 500);
+  
 }
 
 function getTrailingDigit(elem,prefix) {
@@ -586,17 +592,25 @@ function setPlaybackRateForAllSources(r){
   } );
 }
 
+function computeCurrentTrackTime() {
+  if (playStartedTime < 0) {
+    return -1;    
+  } else {
+    var elapsedSecs = context.currentTime - playStartedTime;
+    return playStartedOffset + elapsedSecs;
+  }
+}
+
 function snapshotTime(){
   if (playStartedTime < 0){
+    //TODO: implement so we can snapshot whenever
     console.log("ERROR: can't yet snapshot time when stopped");
-  } else {
-    var elapsedSecs  = context.currentTime - playStartedTime;
-    var trackTime    = playStartedOffset + elapsedSecs;
+  } else {    
+    var trackTime = computeCurrentTrackTime();
     var label = document.getElementById("snapshotName").value;
     
     sectionStarts.push({time: trackTime, label: label});
     console.log("starts: "+ sectionStarts.map(function(s) { return s.label; }));
-
     recreateSectionStartsInDOM();
   }
 }

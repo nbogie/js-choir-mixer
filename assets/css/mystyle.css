@@ -53,9 +53,6 @@ p.sliderrow>.mutebutton-muted-for-solo
 #transportbuttons>ul {
   list-style-type: none;
 }
-#transportbuttons{
-  float: none;
-}
 .sectionStartLabel { 
 }
 .sectionStartTime { 

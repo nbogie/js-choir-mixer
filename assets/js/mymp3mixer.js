@@ -23,6 +23,9 @@ var fftConfig = demoWaveformConfig;
 var useZeroCrossing;
 
 
+var chosenSongInfo;
+
+
 function BufferLoader(context, urlList, callback) {
   this.context    = context;
   this.urlList    = urlList;
@@ -86,16 +89,34 @@ BufferLoader.prototype.load = function() {
   }
 };
 
+function getSongInfos(){
+  var songDirsFree = ["close_to_me", "he_has_done_marvelous_things"];
+  var songDirs   = ["deep_river", "as", 
+                    "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few", 
+                    "good_news", "africa", "am_i_wrong", "do_you_hear"];
+
+  function makePathToSongMetaData(root, name){
+    return root + name +  "/index.json";
+  }
+  var allSongInfos = [[songDirs, 'sounds/'], [songDirsFree, 'sounds-free/']]  
+        .map(function(arr) { 
+          var names = arr[0],
+              root  = arr[1];
+          return names.map(function(name) { 
+              return { root: root, name: name, fullpath: makePathToSongMetaData(root, name) };
+          });
+        });
+  return [].concat.apply([], allSongInfos);
+}
+
 function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", 
-                    "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few", 
-                    "good_news", "africa", "am_i_wrong", "do_you_hear"];
-  var songDir    = songDirs[10];
-  var path       = "sounds/" + songDir + "/index.json";
-  loadJSONSync(path, function(response) { 
+  var allSongInfos = getSongInfos();
+  chosenSongInfo = allSongInfos[allSongInfos.length - 1];
+
+  loadJSONSync(chosenSongInfo.fullpath, function(response) { 
     var json = JSON.parse(response);
     songTitle = json.title || "Untitled";
     trackNames = json.tracks.map(function(t) { return t.name; });
@@ -111,7 +132,7 @@ function initmp3mixer() {
   bufferLoader = new BufferLoader(
     context,
     trackNames.map(function(n) {
-      return "sounds/" + songDir + "/" + n;
+      return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
     }),
     finishedLoading
     );

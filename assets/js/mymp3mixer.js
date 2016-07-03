@@ -180,6 +180,13 @@ function tempMuteTrack(n) {
   setTrackGain(n, 0);
 }
 
+//TODO: integrate this quickly added fn.
+function muteTrackNormally(n) {
+  var elem = $('#mute'+n);
+  elem.addClass('mutebutton-muted');
+  setTrackGain(n, 0);
+}
+
 function setTrackGain(n, g) {
   var pair = sourceAndGainPairs[n];
   pair.gainNode.gain.cancelScheduledValues(context.currentTime);
@@ -220,6 +227,16 @@ function tempUnmuteTrack(i){
   setTrackGainUsingSliderAndMute(i);
 }
 
+function removeAnyMutingOnTrack(i) {
+  var mb = $('#mute'+i);
+  mb.removeClass('mutebutton-muted mutebutton-muted-for-solo');
+}
+
+function removeAnySoloingOnTrack(i) {
+  var mb = $('#solo'+i);
+  mb.removeClass('solobutton-on');
+}
+
 function trackIsMutedOrTempMuted(i) {
   var mb = $('#mute'+i);
   return ( mb.hasClass('mutebutton-muted') || 
@@ -249,7 +266,6 @@ function toggleSoloOn(elem, n) {
   }
   soloGroup.push(n);
 }
-
 function handleMuteButton(elem) {
   console.log("Toggling mute on elem: " + elem.id);
   var n    = getTrailingDigit(elem, "mute");
@@ -336,6 +352,8 @@ function createControlsInDOM(bufferList) {
   $('#playButton').on('click', function(e) { play(); } );
   $('#stopButton').on('click', function(e) { stopAndDestroyAll(); } );
   $('#snapshotButton').on('click', function(e) { snapshotTime(); } );
+  $('#clearButton').on('click', function(e) { clearMix(); } );
+  $('#randomiseButton').on('click', function(e) { randomiseMix(); } );
 }
 
 function finishedLoading(bufferList) {
@@ -364,6 +382,11 @@ function getVolumeSliderValueForTrack(i) {
 
 function getVolumeSliderValueFrom0To1(elem){
   return (parseFloat(elem.value) / 100);
+}
+
+//TODO: integrate this quick hack
+function setVolumeSliderValueForTrack(i, val){
+  $('#vol' + i).val(val);
 }
 
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
@@ -615,6 +638,37 @@ function computeCurrentTrackTime() {
     var elapsedSecs = context.currentTime - playStartedTime;
     return playStartedOffset + elapsedSecs;
   }
+}
+function removeSoloOnTrack(id) {
+      elem.classList.toggle("solobutton-on");
+}
+function clearMix() {
+    //TODO: encapsulate control of soloing, muting, and solo-groups.
+    soloGroup = [];
+    getAllTrackIds().forEach(function(id) {
+        removeAnyMutingOnTrack(id);
+        removeAnySoloingOnTrack(id);
+        setVolumeSliderValueForTrack(id, 100);
+        setTrackGainUsingSlider(id);
+    });
+}
+
+function randomIntBetween(min,max)
+{
+    return Math.floor(Math.random() * (max-min+1) + min);
+}
+
+function randomiseMix() {
+    clearMix();
+    var allTrackIds = getAllTrackIds();
+    function howManyTracksToInclude(totalNum) {
+        var min = Math.min(1, totalNum);
+        var max = Math.max(1, totalNum - 1);
+        return randomIntBetween(min, max);
+    }
+    var numTracksToInclude = howManyTracksToInclude(allTrackIds.length);
+    var trackIdsToMute = _.shuffle(allTrackIds).slice(numTracksToInclude);
+    trackIdsToMute.forEach(muteTrackNormally);
 }
 
 function snapshotTime(){

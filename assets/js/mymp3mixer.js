@@ -309,8 +309,8 @@ function makeControlsForTrack(buf, i) {
 
   var group      = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
   var label      = $("<label/>", {text: simpleTrackName(i), title: trackNames[i]});//TODO: sanitise track names for security
-  var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton"});
-  var soloButton = $("<input/>", {type: "submit", id: "solo" + i, value: "Solo", class: "solobutton"});
+  var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton btn"});
+  var soloButton = $("<input/>", {type: "submit", id: "solo" + i, value: "Solo", class: "solobutton btn"});
   var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100", title: "Change volume of " + trackNames[i]});
   var canvas     = $("<canvas/>", {id: "trackCanvas" + i, width:'500', height:'100'});
 

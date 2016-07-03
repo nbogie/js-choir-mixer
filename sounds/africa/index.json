@@ -26,12 +26,28 @@
        "label": "v2 wild dogs"
      },
      {
+       "time": 120,
+       "label": "v2b I must do what's right"
+     },
+     {
+       "time": 130,
+       "label": "v2c I seek to cure..."
+     },
+     {
        "time": 143,
        "label": "chorus 2"
      },
      {
        "time": 175,
        "label": "v3 old man2"
+     },
+     {
+       "time": 198,
+       "label": "chorus 3"
+     },
+     {
+       "time": 230,
+       "label": "rains inversion up"
      }
    ]
 }

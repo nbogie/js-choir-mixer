@@ -1,13 +1,10 @@
-input[type=button] {
-    background-color: #FFAAAA;
-}
 input[type=range] {
     width: 550px;
 }
 
 p.sliderrow
 {
-width: 80%;
+    width: 80%;
 }
 
 p.sliderrow>label
@@ -47,14 +44,6 @@ p.sliderrow>.mutebutton-muted-for-solo
     background: #cccccc;
 }
 
-#controlset {
-
-}
 #transportbuttons>ul {
   list-style-type: none;
-}
-.sectionStartLabel { 
-}
-.sectionStartTime { 
-
 }

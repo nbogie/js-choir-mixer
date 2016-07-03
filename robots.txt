@@ -1,0 +1,6 @@
+# www.robotstxt.org/
+
+# Exclude all (well-behaved) robots from the entire structure
+User-agent: *
+Disallow: /
+

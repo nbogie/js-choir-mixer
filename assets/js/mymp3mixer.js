@@ -90,8 +90,10 @@ function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few", "good_news", "africa"];
-  var songDir    = songDirs[8];
+  var songDirs   = ["close_to_me", "deep_river", "as", "he_has_done_marvelous_things", 
+                    "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few", 
+                    "good_news", "africa", "am_i_wrong", "do_you_hear"];
+  var songDir    = songDirs[10];
   var path       = "sounds/" + songDir + "/index.json";
   loadJSONSync(path, function(response) { 
     var json = JSON.parse(response);

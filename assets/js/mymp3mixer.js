@@ -1,3 +1,4 @@
+/*global $ */
 "use strict";
 var gBufferList;
 var context;
@@ -34,20 +35,7 @@ function BufferLoader(context, urlList, callback) {
   this.loadCount  = 0;
 }
 
-function loadJSONSync(path, callback) {   
-
-  var xobj = new XMLHttpRequest();
-  xobj.overrideMimeType("application/json");
-  xobj.open('GET', path, false);
-  xobj.onreadystatechange = function () {
-    console.log("on ready from geting " + path + " readystate: " + xobj.readyState + " and status: " + xobj.status);
-    if (xobj.readyState === 4 && xobj.status === 0) { // TODO: "200" when web-served.
-      // Required use of an anonymous callback as .open will NOT return a value but simply returns undefined in asynchronous mode
-      callback(xobj.responseText);
-    }
-  };
-  xobj.send(null);  
-}
+  
 
 BufferLoader.prototype.loadBuffer = function(url, index) {
   // Load buffer asynchronously
@@ -109,42 +97,47 @@ function getSongInfos(){
   return [].concat.apply([], allSongInfos);
 }
 
+
 function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
+  
   var allSongInfos = getSongInfos();
   chosenSongInfo = allSongInfos[allSongInfos.length - 1];
 
-  loadJSONSync(chosenSongInfo.fullpath, function(response) { 
-    var json = JSON.parse(response);
+  function finishInit() {
+    soloGroup = [];
+    context      = new AudioContext();
+    isPlaying    = false;
+    bufferLoader = new BufferLoader(
+      context,
+      trackNames.map(function(n) {
+        return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
+      }),
+      finishedLoading
+    );
+
+    bufferLoader.load();
+    
+    document.getElementById("songTitle").innerHTML = songTitle;    
+    
+    window.setInterval(function() { 
+      var e = document.getElementById("positionMonitor");
+      e.value = computeCurrentTrackTime().toFixed(1);
+    }, 1000);
+  }
+
+  $.getJSON(chosenSongInfo.fullpath, function(response) { 
+    var json = response;
     songTitle = json.title || "Untitled";
     trackNames = json.tracks.map(function(t) { return t.name; });
     sectionStarts = json.sectionStarts || [];
     playbackRate = 1;
     useZeroCrossing = true;
     recreateSectionStartsInDOM();
-  });
-  soloGroup = [];
-
-  context      = new AudioContext();
-  isPlaying    = false;
-  bufferLoader = new BufferLoader(
-    context,
-    trackNames.map(function(n) {
-      return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
-    }),
-    finishedLoading
-    );
-
-  bufferLoader.load();
-  document.getElementById("songTitle").innerHTML = songTitle;
-  
-  window.setInterval(function() { 
-    var e = document.getElementById("positionMonitor");
-    e.value = computeCurrentTrackTime().toFixed(1);
-  }, 500);
-  
+    finishInit();
+  });  
 }
 
 function getTrailingDigit(elem,prefix) {

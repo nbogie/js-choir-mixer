@@ -182,7 +182,7 @@ function tempMuteTrack(n) {
 
 function setTrackGain(n, g) {
   var pair = sourceAndGainPairs[n];
-  pair.gainNode.gain.cancelScheduledValues(context);
+  pair.gainNode.gain.cancelScheduledValues(context.currentTime);
   pair.gainNode.gain.value = g;
 }
 
@@ -254,7 +254,7 @@ function handleMuteButton(elem) {
   console.log("Toggling mute on elem: " + elem.id);
   var n    = getTrailingDigit(elem, "mute");
   var pair = sourceAndGainPairs[n];
-  pair.gainNode.gain.cancelScheduledValues(context);
+  pair.gainNode.gain.cancelScheduledValues(context.currentTime);
   console.log("before: " + pair.gainNode.gain.value + " and classes " + elem.classList);
   
   if (elem.classList.contains("mutebutton-muted")) {

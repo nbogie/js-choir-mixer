@@ -1,4 +1,6 @@
 /*global $ */
+/*global _ */
+
 "use strict";
 var gBufferList;
 var context;
@@ -18,9 +20,12 @@ var playStartedTime = -1;
 var playStartedOffset; // a snapshot of posOffset at start of current play
 var playbackRate;
 
-var demoWaveformConfig = { type: "waveform", size: 1024};
-var demoSpectrumConfig = { type: "spectrum", size: 128};
-var fftConfig = demoWaveformConfig;
+var myFFTConfigs = { waveform: { type: "waveform", size: 1024},
+                   spectrum: { type: "spectrum", size: 128}
+                 };
+
+var fftConfig = myFFTConfigs.waveform;
+
 var useZeroCrossing;
 
 
@@ -97,7 +102,7 @@ function getSongInfos(){
   return [].concat.apply([], allSongInfos);
 }
 
-
+/*exported initmp3mixer */
 function initmp3mixer() {
   console.log("mymp3mixer.js init()");
   // Fix up prefixing
@@ -337,9 +342,9 @@ function makeControlsForTrack(buf, i) {
   group.append(canvas);
   $("#controlset").append(group);
 
-  $('#vol'+i).on('change', function(e) { handleChangeVolumeSlider(this); } );
-  $('#mute'+i).on('click', function(e) { handleMuteButton(this); });
-  $('#solo'+i).on('click', function(e) { handleSoloButton(this); });
+  $('#vol'+i).on('change', function() { handleChangeVolumeSlider(this); } );
+  $('#mute'+i).on('click', function() { handleMuteButton(this); });
+  $('#solo'+i).on('click', function() { handleSoloButton(this); });
   
 }
 
@@ -347,13 +352,13 @@ function createControlsInDOM(bufferList) {
   bufferList.forEach(function(buf, i) {
     makeControlsForTrack(buf, i);
   });
-  $('#positionSlider').on('input', function(e) { handleChangePosition(this); } );
-  $('#playbackRateSlider').on('input', function(e) { handleChangePlaybackRate(this); } );
-  $('#playButton').on('click', function(e) { play(); } );
-  $('#stopButton').on('click', function(e) { stopAndDestroyAll(); } );
-  $('#snapshotButton').on('click', function(e) { snapshotTime(); } );
-  $('#clearButton').on('click', function(e) { clearMix(); } );
-  $('#randomiseButton').on('click', function(e) { randomiseMix(); } );
+  $('#positionSlider').on('input', function() { handleChangePosition(this); } );
+  $('#playbackRateSlider').on('input', function() { handleChangePlaybackRate(this); } );
+  $('#playButton').on('click', function() { play(); } );
+  $('#stopButton').on('click', function() { stopAndDestroyAll(); } );
+  $('#snapshotButton').on('click', function() { snapshotTime(); } );
+  $('#clearButton').on('click', function() { clearMix(); } );
+  $('#randomiseButton').on('click', function() { randomiseMix(); } );
 }
 
 function finishedLoading(bufferList) {
@@ -442,13 +447,9 @@ function drawAllAnims(){
   canvasCtx.fillStyle = 'white';
   canvasCtx.fillRect(0, 0, sharedCanvas.width, sharedCanvas.height);
 
-  var h = sharedCanvas.height;
-  var oneYOffset = h / sourceAndGainPairs.length;
-
   sourceAndGainPairs.forEach(function (pair, i) {
-    var yOffset = -h/2 + i*oneYOffset;
-    drawOneFFT(pair.analyser, pair.dataArray, i);//, sharedCanvas, yOffset);
-});
+    drawOneFFT(pair.analyser, pair.dataArray, i);
+  });
 
   if (numFrames >= 0 ){
     requestAnimationFrame(drawAllAnims);
@@ -593,7 +594,6 @@ function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, 
   canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
   canvasCtx.beginPath();
 
-  var scaling = h / 256;
   canvasCtx.moveTo(0,scaledVals[zeroCross]);
 
   for (var i=zeroCross, j=0; (j<w)&&(i<scaledVals.length); i++, j++){
@@ -621,7 +621,7 @@ function play(){
   sourceAndGainPairs.forEach(function(pair) {
     pair.src.start(0, posOffset);
   } );
-  var drawVisual = requestAnimationFrame(drawAllAnims);
+  requestAnimationFrame(drawAllAnims);
 
   isPlaying = true;
 }
@@ -639,9 +639,7 @@ function computeCurrentTrackTime() {
     return playStartedOffset + elapsedSecs;
   }
 }
-function removeSoloOnTrack(id) {
-      elem.classList.toggle("solobutton-on");
-}
+
 function clearMix() {
     //TODO: encapsulate control of soloing, muting, and solo-groups.
     soloGroup = [];
@@ -714,7 +712,7 @@ function recreateSectionStartsInDOM() {
     listItem.append(timeSpan);
     listItem.append(labelSpan);
     $('#snapshots').append(listItem);    
-    $('#sectionStart'+i).on('click', function(e) { jumpToSection(i); });
+    $('#sectionStart'+i).on('click', function() { jumpToSection(i); });
     console.log("clicking " + s.label + " will jump you to " +i);
   });
 }  

@@ -155,7 +155,6 @@ function pickSong() {
 
 /*exported initmp3mixer */
 function initmp3mixer() {
-    console.log("mymp3mixer.js init()");
     // Fix up prefixing
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     registerDOMControls();
@@ -513,7 +512,6 @@ function handleChangeVolumeSlider(elem) {
     if (!trackIsMutedOrTempMuted(i)) {
         var g = getVolumeSliderValueFrom0To1(elem);
         setTrackGain(i, g);
-        console.log("handleChangeVolumeSlider " + elem.id + " i: " + i + " val: " + elem.value);
     }
 }
 

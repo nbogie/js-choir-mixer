@@ -112,6 +112,8 @@ function getSongInfos() {
 function pickSong() {
     alert('picking a song...');
     var selectedSongName = $('#song-select').val();
+    alert(selectedSongName);
+    alert(JSON.stringify(getSongInfos()));
     var selectedSongInfo = getSongInfos().find(function(si) { return si.name === selectedSongName; });
     if (selectedSongInfo) {
         alert("picked song: " + JSON.stringify(selectedSongInfo));

@@ -813,3 +813,37 @@ function recreateSectionStartsInDOM() {
         });
     });
 }
+
+function playPrevSectionStart() {};
+function cycleSoloPrevTrack() {};
+function playNextSectionStart() {};
+function cycleSoloNextTrack() {};
+
+$(document).keydown(function (evt) {
+    //console.log([evt.which, evt.target.nodeName]);
+    if(evt.target.nodeName != 'INPUT' && evt.target.nodeName != 'TEXTAREA') {
+        switch (evt.keyCode) {
+            case 37:
+                playPrevSectionStart();
+                break;
+            case 38:
+                cycleSoloPrevTrack();
+                break;
+            case 39:
+                playNextSectionStart();
+                break;
+            case 40:
+                cycleSoloNextTrack();
+                break;
+            case 82:
+                randomiseMix();
+                break;
+            case 32:
+            case 80:
+                play();//prevent propagation - space will scroll screen normally.
+                break;
+            default:
+                break;
+        }
+    }
+});

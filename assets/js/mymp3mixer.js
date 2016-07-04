@@ -35,10 +35,6 @@ var fftConfig = myFFTConfigs.waveform;
 
 var useZeroCrossing;
 
-
-var chosenSongInfo;
-
-
 function BufferLoader(context, urlList, callback) {
     this.context = context;
     this.urlList = urlList;
@@ -113,14 +109,31 @@ function getSongInfos() {
     return [].concat.apply([], allSongInfos);
 }
 
+function pickSong() {
+    console.log('clicked pickSong()');
+    var selectedSongName = $('#song-select').val();
+    var selectedSongInfo = getSongInfos().find(si => si.name === selectedSongName);
+    if (selectedSongInfo) {
+        console.log("picked song: " + JSON.stringify(selectedSongInfo));
+        initialiseWithSong(selectedSongInfo);
+    } else {
+        console.log("no (or unknown) song selected");
+    }
+
+}
+
 /*exported initmp3mixer */
 function initmp3mixer() {
     console.log("mymp3mixer.js init()");
     // Fix up prefixing
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    registerDOMControls();
+    getSongInfos().forEach(function(si) {
+        $("<option/>").val(si.name).text(si.name).appendTo("#song-select");
+    });
+}
 
-    var allSongInfos = getSongInfos();
-    chosenSongInfo = allSongInfos[allSongInfos.length - 1];
+function initialiseWithSong(chosenSongInfo) {
 
     function finishInit() {
         playbackRate = 1;
@@ -399,10 +412,7 @@ function makeControlsForTrack(buf, i) {
 
 }
 
-function createControlsInDOM(bufferList) {
-    bufferList.forEach(function (buf, i) {
-        makeControlsForTrack(buf, i);
-    });
+function registerDOMControls() {
     $('#positionSlider').on('input', function () {
         handleChangePosition(this);
     });
@@ -411,6 +421,9 @@ function createControlsInDOM(bufferList) {
     });
     $('#playButton').on('click', function () {
         play();
+    });
+    $('#pickSongButton').on('click', function () {
+        pickSong();
     });
     $('#stopButton').on('click', function () {
         stopAndDestroyAll();
@@ -423,6 +436,11 @@ function createControlsInDOM(bufferList) {
     });
     $('#randomiseButton').on('click', function () {
         randomiseMix();
+    });
+}
+function createControlsInDOM(bufferList) {
+    bufferList.forEach(function (buf, i) {
+        makeControlsForTrack(buf, i);
     });
 }
 

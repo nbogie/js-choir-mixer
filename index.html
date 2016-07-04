@@ -13,7 +13,7 @@
 
 
     <!-- js -->
-    <script src="https://code.jquery.com/jquery-2.2.4.min.js"   integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="   crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
 
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 
@@ -43,48 +43,49 @@
 
         <h2 id="songTitle"></h2>
         <div class="row">
-        <div id="controlset" class="col-md-6">
-        </div>
-        <div class="col-md-6">
-        <div id="transportbuttons">
-            <ul class="list-unstyled">
-                <li>
-                    <input id="stopButton" type="button" value="stop" class="btn btn-danger" />
-                    <input id="playButton" type="button" value="play" class="btn btn-primary" />
-                    <input id="snapshotButton" type="button" value="mark time" class="btn btn-warning" />
-                    <input id="snapshotName" type="text" value="" class="btn btn-default" />
-                </li>
-            </ul>
-        </div>
-        <div id="morebuttons">
-            <ul class="list-unstyled">
-                <li>
-                    <input id="randomiseButton" type="button" value="randomise" class="btn btn-default" />
-                    <input id="clearButton" type="button" value="clear" class="btn btn-default" />
-                </li>
-            </ul>
-        </div>
+            <div id="controlset" class="col-md-6">
+            </div>
+            <div class="col-md-6">
+                <div id="transportbuttons">
+                    <ul class="list-unstyled">
+                        <li>
+                            <input id="stopButton" type="button" value="stop" class="btn btn-danger" />
+                            <input id="playButton" type="button" value="play" class="btn btn-primary" />
+                            <input id="snapshotButton" type="button" value="mark time" class="btn btn-warning" />
+                            <input id="snapshotName" type="text" value="" class="btn btn-default" />
+                        </li>
+                    </ul>
+                </div>
+                <div id="morebuttons">
+                    <ul class="list-unstyled">
+                        <li>
+                            <input id="randomiseButton" type="button" value="randomise" class="btn btn-default" />
+                            <input id="clearButton" type="button" value="clear" class="btn btn-default" />
+                        </li>
+                    </ul>
+                </div>
 
-        <p>position:
-            <input id="positionSlider" type="range" min="0" max="100" value="100" step="0.3">
-            <input id="positionOutput" type="text" value="??" />
-            <input id="positionMonitor" type="text" value="??" />
-        </p>
+                <p>position:
+                    <input id="positionSlider" type="range" min="0" max="100" value="100" step="0.3">
+                    <input id="positionOutput" type="text" value="??" />
+                    <input id="positionMonitor" type="text" value="??" />
+                </p>
 
-        <p>playbackRate:
-            <input id="playbackRateSlider" type="range" min="0.5" max="4" value="1" step="0.05">
-            <!--  oninput="handleChangePlaybackRate(this);"> -->
-            <input id="playbackRateOutput" type="text" value="1" />
-        </p>
+                <p>playbackRate:
+                    <input id="playbackRateSlider" type="range" min="0.5" max="4" value="1" step="0.05">
+                    <!--  oninput="handleChangePlaybackRate(this);"> -->
+                    <input id="playbackRateOutput" type="text" value="1" />
+                </p>
 
-        <div>
-            <ul id="snapshots" class="list-unstyled">
-            </ul>
+                <div>
+                    <ul id="snapshots" class="list-unstyled">
+                    </ul>
+                </div>
+            </div>
         </div>
-    </div>
-    </div>
 
     </div>
 
 </body>
+
 </html>

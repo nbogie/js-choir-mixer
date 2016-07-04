@@ -367,18 +367,14 @@ function makeControlsForTrack(buf, i) {
         text: simpleTrackName(i),
         title: trackNames[i]
     }); //TODO: sanitise track names for security
-    var muteButton = $("<input/>", {
-        type: "submit",
+    var muteButton = $("<button/>", {
         id: "mute" + i,
-        value: "Mute",
         class: "mutebutton btn btn-default"
-    });
-    var soloButton = $("<input/>", {
-        type: "submit",
+    }).append("<i class='fa fa-volume-off'></i>");
+    var soloButton = $("<button/>", {
         id: "solo" + i,
-        value: "Solo",
         class: "solobutton btn btn-default"
-    });
+    }).append("<i class='fa fa-headphones'></i>");
     var slider = $("<input/>", {
         type: "range",
         id: "vol" + i,

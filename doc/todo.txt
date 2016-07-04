@@ -1,5 +1,10 @@
 # TODO list
 
+* keyboard shortcuts:
+    Space to toggle play.
+    left, right arrows to start and prev or next song point. 
+    up, down arrows to solo prev or next track, restarting playback at last selected section.
+    
 * be sure that no intended-to-be-deleted nodes are being held onto through the lifetime of the app, e.g. referenced elsewhere.
 
 * When tracks are looping, time readout should loop, too.  Currently, it continues incrementing after the loop point.

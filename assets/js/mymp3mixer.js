@@ -760,8 +760,8 @@ function snapshotTime() {
         //TODO: implement so we can snapshot whenever
         console.log("ERROR: can't yet snapshot time when stopped");
     } else {
-        var trackTime = computeCurrentTrackTime();
-        var label = $('#snapshotName').val();
+        var trackTime = +(computeCurrentTrackTime().toFixed(1));
+        var label = $('#snapshotName').val() || "untitled";
         sectionStarts.push({
             time: trackTime,
             label: label
@@ -797,7 +797,7 @@ function recreateSectionStartsInDOM() {
         var timeText = "" + Math.round(s.time) + "s";
         var labelSpan = $('<button/>', {
             class: "btn btn-default btn-sm",
-            text: (s.label || "untitled") + " @ " + timeText
+            text: s.label + " @ " + timeText
         });
         var listItem = $('<li/>', {
             class: "sectionStart",

@@ -21,6 +21,8 @@
 
 * Add a radix of 10 to calls to parseInt, to prevent leading zeros on numbers changing their base for interpretation.
 
+* Warn when files are different durations that they will (probably) not loop correctly.
+
 ### Issues relating to controls when stopped:
 
 * don't dispose of the graph on stop() (at most, get rid of the buffersource nodes).  This will allow volume sliders and mute buttons to when nothing is playing.

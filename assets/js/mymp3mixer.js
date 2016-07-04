@@ -27,26 +27,26 @@ if (!Array.prototype.find) {
   };
 }
 
-
 var gBufferList;
-var context;
-var bufferLoader;
-var sourceAndGainPairs;
-var trackNames;
-var sectionStarts;
-var songTitle;
-var numFrames = 0;
+var gContext;
+var gBufferLoader;
+var gSourceAndGainPairs;
 
-var soloGroup;
+var gTrackNames;
+var gSectionStarts;
+var gSongTitle;
+var gFrameNumber = 0;
 
-var isPlaying; //Fixme: ask the API, instead
+var gSoloGroup;
 
-var posOffset = 0;
-var playStartedTime = -1;
-var playStartedOffset; // a snapshot of posOffset at start of current play
-var playbackRate;
+var gIsPlaying; //Fixme: ask the API, instead
 
-var myFFTConfigs = {
+var gPosOffset = 0;
+var gPlayStartedTime = -1;
+var gPlayStartedOffset; // a snapshot of gPosOffset at start of current play
+var gPlaybackRate;
+
+var gFFTConfigs = {
     waveform: {
         type: "waveform",
         size: 1024
@@ -57,9 +57,9 @@ var myFFTConfigs = {
     }
 };
 
-var fftConfig = myFFTConfigs.waveform;
+var gFFTConfig = gFFTConfigs.waveform;
 
-var useZeroCrossing;
+var gUseZeroCrossing;
 
 function BufferLoader(context, urlList, callback) {
     this.context = context;
@@ -164,20 +164,20 @@ function initmp3mixer() {
 function initialiseWithSong(chosenSongInfo) {
 
     function finishInit() {
-        playbackRate = 1;
-        useZeroCrossing = true;
-        soloGroup = [];
-        isPlaying = false;
-        context = new AudioContext();
-        bufferLoader = new BufferLoader(
-            context,
-            trackNames.map(function (n) {
+        gPlaybackRate = 1;
+        gUseZeroCrossing = true;
+        gSoloGroup = [];
+        gIsPlaying = false;
+        gContext = new AudioContext();
+        gBufferLoader = new BufferLoader(
+            gContext,
+            gTrackNames.map(function (n) {
                 return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
             }),
             finishedLoading
         );
 
-        bufferLoader.load();
+        gBufferLoader.load();
 
         window.setInterval(function () {
             $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));
@@ -186,12 +186,12 @@ function initialiseWithSong(chosenSongInfo) {
 
     function handleJSON(response) {
         var json = response;
-        songTitle = json.title || "Untitled";
-        $("#songTitle").html(songTitle);
-        trackNames = json.tracks.map(function (t) {
+        gSongTitle = json.title || "Untitled";
+        $("#songTitle").html(gSongTitle);
+        gTrackNames = json.tracks.map(function (t) {
             return t.name;
         });
-        sectionStarts = json.sectionStarts || [];
+        gSectionStarts = json.sectionStarts || [];
         recreateSectionStartsInDOM();
         finishInit();
     }
@@ -217,7 +217,7 @@ function removeFromArray(arr, o) {
 }
 
 function getAllTrackIds() {
-    var n = sourceAndGainPairs.length;
+    var n = gSourceAndGainPairs.length;
     var ids = [];
     for (var i = 0; i < n; i++) {
         ids.push(i);
@@ -228,7 +228,7 @@ function getAllTrackIds() {
 function getAllNonSoloTrackIds() {
     var all = getAllTrackIds();
     return all.filter(function (i) {
-        return (soloGroup.indexOf(i) < 0);
+        return (gSoloGroup.indexOf(i) < 0);
     });
 }
 
@@ -246,15 +246,15 @@ function muteTrackNormally(n) {
 }
 
 function setTrackGain(n, g) {
-    var pair = sourceAndGainPairs[n];
-    pair.gainNode.gain.cancelScheduledValues(context.currentTime);
+    var pair = gSourceAndGainPairs[n];
+    pair.gainNode.gain.cancelScheduledValues(gContext.currentTime);
     pair.gainNode.gain.value = g;
 }
 
 function handleSoloButton(elem) {
     console.log("Toggling solo on elem: " + elem.id);
     var n = getTrailingDigit(elem, "solo");
-    if (soloGroup.indexOf(n) < 0) {
+    if (gSoloGroup.indexOf(n) < 0) {
         toggleSoloOn(elem, n);
     } else {
         toggleSoloOff(elem, n);
@@ -264,7 +264,7 @@ function handleSoloButton(elem) {
 
 function toggleSoloOff(elem, n) {
     console.log("toggle solo off for " + n);
-    if (soloGroup.length < 2) {
+    if (gSoloGroup.length < 2) {
         console.log("solo group ending");
 
         //unmute everything that has been muted-for-solo
@@ -276,7 +276,7 @@ function toggleSoloOff(elem, n) {
     } else {
         tempMuteTrack(n);
     }
-    removeFromArray(soloGroup, n);
+    removeFromArray(gSoloGroup, n);
 }
 
 function tempUnmuteTrack(i) {
@@ -315,22 +315,22 @@ function setTrackGainUsingSliderAndMute(i) {
 }
 
 function toggleSoloOn(elem, n) {
-    if (soloGroup.length > 0) {
-        console.log("adding " + n + " to existing solo group with " + soloGroup);
+    if (gSoloGroup.length > 0) {
+        console.log("adding " + n + " to existing solo group with " + gSoloGroup);
         tempUnmuteTrack(n);
     } else {
         var otherIds = getAllTrackIdsExcept(n);
         console.log("starting new solo group with " + n + " and temp-muting " + otherIds);
         otherIds.forEach(tempMuteTrack);
     }
-    soloGroup.push(n);
+    gSoloGroup.push(n);
 }
 
 function handleMuteButton(elem) {
     console.log("Toggling mute on elem: " + elem.id);
     var n = getTrailingDigit(elem, "mute");
-    var pair = sourceAndGainPairs[n];
-    pair.gainNode.gain.cancelScheduledValues(context.currentTime);
+    var pair = gSourceAndGainPairs[n];
+    pair.gainNode.gain.cancelScheduledValues(gContext.currentTime);
     console.log("before: " + pair.gainNode.gain.value + " and classes " + elem.classList);
 
     if (elem.classList.contains("mutebutton-muted")) {
@@ -348,7 +348,7 @@ function handleMuteButton(elem) {
 }
 
 function createSourceOnBuffer(b) {
-    var src = context.createBufferSource();
+    var src = gContext.createBufferSource();
     src.playbackRate.value = 1;
     src.buffer = b;
     return src;
@@ -356,8 +356,8 @@ function createSourceOnBuffer(b) {
 
 function createGainedSourceOnBuffer(b) {
     var src = createSourceOnBuffer(b);
-    var analyser = context.createAnalyser();
-    analyser.fftSize = fftConfig.size;
+    var analyser = gContext.createAnalyser();
+    analyser.fftSize = gFFTConfig.size;
     var bufferLength = analyser.frequencyBinCount;
     var dataArray = new Uint8Array(bufferLength);
 
@@ -374,13 +374,13 @@ function createGainedSourceOnBuffer(b) {
 }
 
 function createAllGainedSourcesOnBuffers(bufferList) {
-    sourceAndGainPairs = bufferList.map(function (buf) {
+    gSourceAndGainPairs = bufferList.map(function (buf) {
         return createGainedSourceOnBuffer(buf);
     });
 }
 
 function simpleTrackName(i) {
-    var input = trackNames[i];
+    var input = gTrackNames[i];
     return input.substr(0, input.lastIndexOf('.')) || input;
 }
 
@@ -392,7 +392,7 @@ function makeControlsForTrack(buf, i) {
     });
     var label = $("<label/>", {
         text: simpleTrackName(i),
-        title: trackNames[i]
+        title: gTrackNames[i]
     }); //TODO: sanitise track names for security
     var muteButton = $("<button/>", {
         id: "mute" + i,
@@ -409,7 +409,7 @@ function makeControlsForTrack(buf, i) {
         class: "slider",
         min: "0",
         max: "100",
-        title: "Change volume of " + trackNames[i]
+        title: "Change volume of " + gTrackNames[i]
     });
     var canvas = $("<canvas/>", {
         id: "trackCanvas" + i,
@@ -478,13 +478,13 @@ function finishedLoading(bufferList) {
 }
 
 function wipeAllNodes() {
-    sourceAndGainPairs = [];
+    gSourceAndGainPairs = [];
 }
 
 function linkThroughGain(src) {
-    var gainNode = context.createGain();
+    var gainNode = gContext.createGain();
     src.connect(gainNode);
-    gainNode.connect(context.destination);
+    gainNode.connect(gContext.destination);
     gainNode.gain.value = 1;
     return gainNode;
 }
@@ -514,7 +514,7 @@ function handleChangeVolumeSlider(elem) {
 }
 
 function lengthOfFirstBufferInSec() {
-    return sourceAndGainPairs[0].src.buffer.duration;
+    return gSourceAndGainPairs[0].src.buffer.duration;
 }
 
 function handleChangePosition(elem) {
@@ -530,21 +530,21 @@ function convertSliderValueToSeconds(elem) {
 }
 
 function stopAndDestroyAll() {
-    playStartedTime = -1;
-    var firstSource = sourceAndGainPairs[0].src;
+    gPlayStartedTime = -1;
+    var firstSource = gSourceAndGainPairs[0].src;
     if (firstSource !== null) {
-        sourceAndGainPairs.forEach(function (pair) {
+        gSourceAndGainPairs.forEach(function (pair) {
             if (pair.src !== null) {
                 pair.src.stop(0);
             }
         });
-        isPlaying = false;
+        gIsPlaying = false;
         wipeAllNodes();
     }
 }
 
 function setAllSourcesToLoop(shouldLoop) {
-    sourceAndGainPairs.forEach(function (pair) {
+    gSourceAndGainPairs.forEach(function (pair) {
         pair.src.loop = shouldLoop;
     });
 }
@@ -556,21 +556,21 @@ function drawAllAnims() {
     canvasCtx.fillStyle = 'white';
     canvasCtx.fillRect(0, 0, sharedCanvas.width, sharedCanvas.height);
 
-    sourceAndGainPairs.forEach(function (pair, i) {
+    gSourceAndGainPairs.forEach(function (pair, i) {
         drawOneFFT(pair.analyser, pair.dataArray, i);
     });
 
-    if (numFrames >= 0) {
+    if (gFrameNumber >= 0) {
         requestAnimationFrame(drawAllAnims);
-        numFrames += 1;
+        gFrameNumber += 1;
     }
 
 }
 
-var MINVAL = 134; // 128 == zero.  MINVAL is the "minimum detected signal" level.
-
-
 function findFirstPositiveZeroCrossing(buf, buflen) {
+
+    var MINVAL = 134; // 128 == zero.  MINVAL is the "minimum detected signal" level.
+
     var i = 0;
     var last_zero = -1;
     var t;
@@ -624,7 +624,7 @@ function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset) {
     canvasCtx.fillStyle = 'white';
     canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    if (fftConfig.type === "spectrum") {
+    if (gFFTConfig.type === "spectrum") {
         analyser.getByteFrequencyData(dataArray);
     } else {
         analyser.getByteTimeDomainData(dataArray);
@@ -641,11 +641,11 @@ function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset) {
         scaledVals.push(val);
     }
 
-    if (fftConfig.type === "spectrum") {
+    if (gFFTConfig.type === "spectrum") {
         drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
-    } else if (fftConfig.type === "waveform") {
+    } else if (gFFTConfig.type === "waveform") {
         if (signalAboveThreshold(dataArray)) {
-            if (useZeroCrossing) {
+            if (gUseZeroCrossing) {
                 var zeroCross = findFirstPositiveZeroCrossing(dataArray, canvasWidth);
                 drawWaveformAtZeroCrossing(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset, zeroCross);
             } else {
@@ -715,46 +715,46 @@ function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, 
 }
 
 function play() {
-    if (isPlaying) {
+    if (gIsPlaying) {
         stopAndDestroyAll();
-        isPlaying = false;
+        gIsPlaying = false;
     }
     createAllGainedSourcesOnBuffers(gBufferList);
     setAllSourcesToLoop(true);
-    setPlaybackRateForAllSources(playbackRate);
+    setPlaybackRateForAllSources(gPlaybackRate);
 
     getAllTrackIds().forEach(function (i) {
         setTrackGainUsingSliderAndMute(i);
     });
 
-    playStartedTime = context.currentTime;
-    playStartedOffset = posOffset;
-    sourceAndGainPairs.forEach(function (pair) {
-        pair.src.start(0, posOffset);
+    gPlayStartedTime = gContext.currentTime;
+    gPlayStartedOffset = gPosOffset;
+    gSourceAndGainPairs.forEach(function (pair) {
+        pair.src.start(0, gPosOffset);
     });
     requestAnimationFrame(drawAllAnims);
 
-    isPlaying = true;
+    gIsPlaying = true;
 }
 
 function setPlaybackRateForAllSources(r) {
-    sourceAndGainPairs.forEach(function (pair) {
+    gSourceAndGainPairs.forEach(function (pair) {
         pair.src.playbackRate.value = r;
     });
 }
 
 function computeCurrentTrackTime() {
-    if (playStartedTime < 0) {
+    if (gPlayStartedTime < 0) {
         return -1;
     } else {
-        var elapsedSecs = context.currentTime - playStartedTime;
-        return playStartedOffset + elapsedSecs;
+        var elapsedSecs = gContext.currentTime - gPlayStartedTime;
+        return gPlayStartedOffset + elapsedSecs;
     }
 }
 
 function clearMix() {
     //TODO: encapsulate control of soloing, muting, and solo-groups.
-    soloGroup = [];
+    gSoloGroup = [];
     getAllTrackIds().forEach(function (id) {
         removeAnyMutingOnTrack(id);
         removeAnySoloingOnTrack(id);
@@ -782,13 +782,13 @@ function randomiseMix() {
 }
 
 function snapshotTime() {
-    if (playStartedTime < 0) {
+    if (gPlayStartedTime < 0) {
         //TODO: implement so we can snapshot whenever
         console.log("ERROR: can't yet snapshot time when stopped");
     } else {
         var trackTime = +(computeCurrentTrackTime().toFixed(1));
         var label = $('#snapshotName').val() || "untitled";
-        sectionStarts.push({
+        gSectionStarts.push({
             time: trackTime,
             label: label
         });
@@ -798,18 +798,18 @@ function snapshotTime() {
 }
 
 function updatePlaybackRate(val) {
-    playbackRate = val;
-    $("#playbackRateOutput").val(playbackRate);
+    gPlaybackRate = val;
+    $("#playbackRateOutput").val(gPlaybackRate);
 }
 
 function updatePosOffset(val) {
-    posOffset = val;
-    $("#positionOutput").val(posOffset);
+    gPosOffset = val;
+    $("#positionOutput").val(gPosOffset);
 }
 
 function jumpToSection(i) {
-    //var val = convertSecondsToSliderValue(sectionStarts[i]);
-    var secs = sectionStarts[i].time;
+    //var val = convertSecondsToSliderValue(gSectionStarts[i]);
+    var secs = gSectionStarts[i].time;
     updatePosOffset(secs);
     play();
     //TODO: update slider to reflect new position
@@ -832,7 +832,7 @@ function recreateSectionStartsInDOM() {
         return listItem;
     }
 
-    sectionStarts.forEach(function (s, i) {
+    gSectionStarts.forEach(function (s, i) {
         $('#snapshots').append(makeSnapshotElement(s, i));
         $('#sectionStart' + i).on('click', function () {
             jumpToSection(i);

@@ -18,6 +18,8 @@
 
 * drop the overall gain when as more tracks are added.
 
+* Don't error when moving position position slider when stopped.  Prevent slider moving, if necessary.
+
 * visualise each track.
 
 * have waveform vis first look for first positive zero crossing, to try to keep a more stable window onto the waveform each frame.  e.g. http://webaudiodemos.appspot.com/oscilloscope/index.html

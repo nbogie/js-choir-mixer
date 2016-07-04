@@ -2,23 +2,11 @@ input[type=range] {
     width: 550px;
 }
 
-p.sliderrow
-{
-    width: 80%;
-}
-
 p.sliderrow>label
 {
     width: 10%;
     float: left;  
 }
-
-input.slider
-{
-    width: 45%;
-    background: green;
-}
-
 
 p.sliderrow>.mutebutton
 {

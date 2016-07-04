@@ -1,5 +1,7 @@
 # TODO list
 
+* Implement import and export of section start times file.
+
 * keyboard shortcuts:
     Space to toggle play.
     left, right arrows to start and prev or next song point. 

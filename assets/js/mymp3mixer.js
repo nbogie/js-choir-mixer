@@ -114,7 +114,10 @@ function pickSong() {
     var selectedSongName = $('#song-select').val();
     alert(selectedSongName);
     alert(JSON.stringify(getSongInfos()));
-    var selectedSongInfo = getSongInfos().find(function(si) { return si.name === selectedSongName; });
+    var selectedSongInfo = getSongInfos().find(function(si) {
+        alert("comparing: " + JSON.stringify([si.name, selectedSongName, si.name==selectedSongName]));
+        return si.name == selectedSongName;
+    });
     if (selectedSongInfo) {
         alert("picked song: " + JSON.stringify(selectedSongInfo));
         initialiseWithSong(selectedSongInfo);
@@ -816,10 +819,10 @@ function recreateSectionStartsInDOM() {
     });
 }
 
-function playPrevSectionStart() {};
-function cycleSoloPrevTrack() {};
-function playNextSectionStart() {};
-function cycleSoloNextTrack() {};
+function playPrevSectionStart() {}
+function cycleSoloPrevTrack() {}
+function playNextSectionStart() {}
+function cycleSoloNextTrack() {}
 
 $(document).keydown(function (evt) {
     //console.log([evt.which, evt.target.nodeName]);

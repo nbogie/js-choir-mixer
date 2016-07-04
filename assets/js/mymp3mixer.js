@@ -27,6 +27,13 @@ if (!Array.prototype.find) {
   };
 }
 
+//modifies the given array
+function removeFromArray(arr, o) {
+    var i = arr.indexOf(o);
+    arr.splice(i, 1);
+}
+
+
 var gBufferList;
 var gContext;
 var gSourceAndGainPairs;
@@ -208,12 +215,6 @@ function getAllTrackIdsExcept(n) {
     var arr = getAllTrackIds();
     removeFromArray(arr, n);
     return arr;
-}
-
-//modifies the given array
-function removeFromArray(arr, o) {
-    var i = arr.indexOf(o);
-    arr.splice(i, 1);
 }
 
 function getAllTrackIds() {

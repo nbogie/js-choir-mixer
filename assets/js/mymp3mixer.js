@@ -782,7 +782,6 @@ function updatePosOffset(val) {
 }
 
 function jumpToSection(i) {
-    console.log("jump to section: " + i);
     //var val = convertSecondsToSliderValue(sectionStarts[i]);
     var secs = sectionStarts[i].time;
     updatePosOffset(secs);

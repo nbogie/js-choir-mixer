@@ -20,9 +20,16 @@ var playStartedTime = -1;
 var playStartedOffset; // a snapshot of posOffset at start of current play
 var playbackRate;
 
-var myFFTConfigs = { waveform: { type: "waveform", size: 1024},
-                   spectrum: { type: "spectrum", size: 128}
-                 };
+var myFFTConfigs = {
+    waveform: {
+        type: "waveform",
+        size: 1024
+    },
+    spectrum: {
+        type: "spectrum",
+        size: 128
+    }
+};
 
 var fftConfig = myFFTConfigs.waveform;
 
@@ -33,218 +40,224 @@ var chosenSongInfo;
 
 
 function BufferLoader(context, urlList, callback) {
-  this.context    = context;
-  this.urlList    = urlList;
-  this.onload     = callback;
-  this.bufferList = [];
-  this.loadCount  = 0;
+    this.context = context;
+    this.urlList = urlList;
+    this.onload = callback;
+    this.bufferList = [];
+    this.loadCount = 0;
 }
 
-  
 
-BufferLoader.prototype.loadBuffer = function(url, index) {
-  // Load buffer asynchronously
-  var request = new XMLHttpRequest();
-  request.open("GET", url, true);
-  request.responseType = "arraybuffer";
 
-  var loader = this;
+BufferLoader.prototype.loadBuffer = function (url, index) {
+    // Load buffer asynchronously
+    var request = new XMLHttpRequest();
+    request.open("GET", url, true);
+    request.responseType = "arraybuffer";
 
-  request.onload = function() {
-    // Asynchronously decode the audio file data in request.response
-    loader.context.decodeAudioData(
-      request.response,
-      function(buffer) {
-        if (!buffer) {
-          alert('error decoding file data: ' + url);
-          return;
-        }
-        loader.bufferList[index] = buffer;
-        if (++loader.loadCount == loader.urlList.length)
-          loader.onload(loader.bufferList);
-      },
-      function(error) {
-        console.error('decodeAudioData error', error);
-      }
-    );
-  };
+    var loader = this;
 
-  request.onerror = function() {
-    alert('BufferLoader: XHR error');
-  };
+    request.onload = function () {
+        // Asynchronously decode the audio file data in request.response
+        loader.context.decodeAudioData(
+            request.response,
+            function (buffer) {
+                if (!buffer) {
+                    alert('error decoding file data: ' + url);
+                    return;
+                }
+                loader.bufferList[index] = buffer;
+                if (++loader.loadCount == loader.urlList.length)
+                    loader.onload(loader.bufferList);
+            },
+            function (error) {
+                console.error('decodeAudioData error', error);
+            }
+        );
+    };
 
-  request.send();
+    request.onerror = function () {
+        alert('BufferLoader: XHR error');
+    };
+
+    request.send();
 };
 
-BufferLoader.prototype.load = function() {
-  for (var i = 0; i < this.urlList.length; ++i) {
-    this.loadBuffer(this.urlList[i], i);
-  }
+BufferLoader.prototype.load = function () {
+    for (var i = 0; i < this.urlList.length; ++i) {
+        this.loadBuffer(this.urlList[i], i);
+    }
 };
 
-function getSongInfos(){
-  var songDirsFree = ["close_to_me", "he_has_done_marvelous_things"];
-  var songDirs   = ["deep_river", "as", 
-                    "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few", 
+function getSongInfos() {
+    var songDirsFree = ["close_to_me", "he_has_done_marvelous_things"];
+    var songDirs = ["deep_river", "as",
+                    "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few",
                     "good_news", "africa", "am_i_wrong", "do_you_hear"];
 
-  function makePathToSongMetaData(root, name){
-    return root + name +  "/index.json";
-  }
-  var allSongInfos = [[songDirs, 'sounds/'], [songDirsFree, 'sounds-free/']]  
-        .map(function(arr) { 
-          var names = arr[0],
-              root  = arr[1];
-          return names.map(function(name) { 
-              return { root: root, name: name, fullpath: makePathToSongMetaData(root, name) };
-          });
+    function makePathToSongMetaData(root, name) {
+        return root + name + "/index.json";
+    }
+    var allSongInfos = [[songDirs, 'sounds/'], [songDirsFree, 'sounds-free/']]
+        .map(function (arr) {
+            var names = arr[0],
+                root = arr[1];
+            return names.map(function (name) {
+                return {
+                    root: root,
+                    name: name,
+                    fullpath: makePathToSongMetaData(root, name)
+                };
+            });
         });
-  return [].concat.apply([], allSongInfos);
+    return [].concat.apply([], allSongInfos);
 }
 
 /*exported initmp3mixer */
 function initmp3mixer() {
-  console.log("mymp3mixer.js init()");
-  // Fix up prefixing
-  window.AudioContext = window.AudioContext || window.webkitAudioContext;
-  
-  var allSongInfos = getSongInfos();
-  chosenSongInfo = allSongInfos[allSongInfos.length - 1];
+    console.log("mymp3mixer.js init()");
+    // Fix up prefixing
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-  function finishInit() {
-    soloGroup = [];
-    context      = new AudioContext();
-    isPlaying    = false;
-    bufferLoader = new BufferLoader(
-      context,
-      trackNames.map(function(n) {
-        return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
-      }),
-      finishedLoading
-    );
+    var allSongInfos = getSongInfos();
+    chosenSongInfo = allSongInfos[allSongInfos.length - 1];
 
-    bufferLoader.load();
-    
-    $("#songTitle").html(songTitle);
-    
-    window.setInterval(function() { 
-      $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));
-    }, 1000);
-  }
+    function finishInit() {
+        soloGroup = [];
+        context = new AudioContext();
+        isPlaying = false;
+        bufferLoader = new BufferLoader(
+            context,
+            trackNames.map(function (n) {
+                return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
+            }),
+            finishedLoading
+        );
 
-  $.getJSON(chosenSongInfo.fullpath, function(response) { 
-    var json = response;
-    songTitle = json.title || "Untitled";
-    trackNames = json.tracks.map(function(t) { return t.name; });
-    sectionStarts = json.sectionStarts || [];
-    playbackRate = 1;
-    useZeroCrossing = true;
-    recreateSectionStartsInDOM();
-    finishInit();
-  });  
+        bufferLoader.load();
+
+        $("#songTitle").html(songTitle);
+
+        window.setInterval(function () {
+            $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));
+        }, 1000);
+    }
+
+    $.getJSON(chosenSongInfo.fullpath, function (response) {
+        var json = response;
+        songTitle = json.title || "Untitled";
+        trackNames = json.tracks.map(function (t) {
+            return t.name;
+        });
+        sectionStarts = json.sectionStarts || [];
+        playbackRate = 1;
+        useZeroCrossing = true;
+        recreateSectionStartsInDOM();
+        finishInit();
+    });
 }
 
-function getTrailingDigit(elem,prefix) {
-  var l = prefix.length;
-  var numstr = elem.id.substring(l,l+1);
-  return parseInt(numstr);
+function getTrailingDigit(elem, prefix) {
+    var l = prefix.length;
+    var numstr = elem.id.substring(l, l + 1);
+    return parseInt(numstr);
 }
 
 function getAllTrackIdsExcept(n) {
-  var arr = getAllTrackIds();
-  removeFromArray(arr, n);
-  return arr;
+    var arr = getAllTrackIds();
+    removeFromArray(arr, n);
+    return arr;
 }
 
 //modifies the given array
-function removeFromArray(arr, o){
-  var i = arr.indexOf(o);
-  arr.splice(i, 1);
+function removeFromArray(arr, o) {
+    var i = arr.indexOf(o);
+    arr.splice(i, 1);
 }
 
 function getAllTrackIds() {
-  var n = sourceAndGainPairs.length;
-  var ids = [];
-  for(var i = 0; i < n; i++) {
-    ids.push(i);
-  }
-  return ids;
+    var n = sourceAndGainPairs.length;
+    var ids = [];
+    for (var i = 0; i < n; i++) {
+        ids.push(i);
+    }
+    return ids;
 }
 
 function getAllNonSoloTrackIds() {
-  var all = getAllTrackIds();
-  return all.filter(function(i) { 
-    return (soloGroup.indexOf(i) < 0);
-  });
+    var all = getAllTrackIds();
+    return all.filter(function (i) {
+        return (soloGroup.indexOf(i) < 0);
+    });
 }
 
 function tempMuteTrack(n) {
-  var elem = $('#mute'+n);
-  elem.addClass('mutebutton-muted-for-solo');
-  setTrackGain(n, 0);
+    var elem = $('#mute' + n);
+    elem.addClass('mutebutton-muted-for-solo');
+    setTrackGain(n, 0);
 }
 
 //TODO: integrate this quickly added fn.
 function muteTrackNormally(n) {
-  var elem = $('#mute'+n);
-  elem.addClass('mutebutton-muted');
-  setTrackGain(n, 0);
+    var elem = $('#mute' + n);
+    elem.addClass('mutebutton-muted');
+    setTrackGain(n, 0);
 }
 
 function setTrackGain(n, g) {
-  var pair = sourceAndGainPairs[n];
-  pair.gainNode.gain.cancelScheduledValues(context.currentTime);
-  pair.gainNode.gain.value = g;
+    var pair = sourceAndGainPairs[n];
+    pair.gainNode.gain.cancelScheduledValues(context.currentTime);
+    pair.gainNode.gain.value = g;
 }
 
 function handleSoloButton(elem) {
-  console.log("Toggling solo on elem: " + elem.id);
-  var n    = getTrailingDigit(elem, "solo");
-  if (soloGroup.indexOf(n) < 0) {
-    toggleSoloOn(elem, n);
-  } else {
-    toggleSoloOff(elem, n);
-  }
-  elem.classList.toggle("solobutton-on");
+    console.log("Toggling solo on elem: " + elem.id);
+    var n = getTrailingDigit(elem, "solo");
+    if (soloGroup.indexOf(n) < 0) {
+        toggleSoloOn(elem, n);
+    } else {
+        toggleSoloOff(elem, n);
+    }
+    elem.classList.toggle("solobutton-on");
 }
 
 function toggleSoloOff(elem, n) {
-  console.log("toggle solo off for " + n);
-  if(soloGroup.length < 2){
-    console.log("solo group ending");
-    
-    //unmute everything that has been muted-for-solo
-    var toUnmute = getAllNonSoloTrackIds();
-    console.log("non-solo tracks: " + toUnmute);
-    toUnmute.forEach(function(i) {
-      tempUnmuteTrack(i);
-    });
-  } else {
-    tempMuteTrack(n);
-  }
-  removeFromArray(soloGroup, n);
+    console.log("toggle solo off for " + n);
+    if (soloGroup.length < 2) {
+        console.log("solo group ending");
+
+        //unmute everything that has been muted-for-solo
+        var toUnmute = getAllNonSoloTrackIds();
+        console.log("non-solo tracks: " + toUnmute);
+        toUnmute.forEach(function (i) {
+            tempUnmuteTrack(i);
+        });
+    } else {
+        tempMuteTrack(n);
+    }
+    removeFromArray(soloGroup, n);
 }
 
-function tempUnmuteTrack(i){
-  var elem = $('#mute'+i);
-  elem.removeClass('mutebutton-muted-for-solo');
-  setTrackGainUsingSliderAndMute(i);
+function tempUnmuteTrack(i) {
+    var elem = $('#mute' + i);
+    elem.removeClass('mutebutton-muted-for-solo');
+    setTrackGainUsingSliderAndMute(i);
 }
 
 function removeAnyMutingOnTrack(i) {
-  var mb = $('#mute'+i);
-  mb.removeClass('mutebutton-muted mutebutton-muted-for-solo');
+    var mb = $('#mute' + i);
+    mb.removeClass('mutebutton-muted mutebutton-muted-for-solo');
 }
 
 function removeAnySoloingOnTrack(i) {
-  var mb = $('#solo'+i);
-  mb.removeClass('solobutton-on');
+    var mb = $('#solo' + i);
+    mb.removeClass('solobutton-on');
 }
 
 function trackIsMutedOrTempMuted(i) {
-  var mb = $('#mute'+i);
-  return ( mb.hasClass('mutebutton-muted') || 
-           mb.hasClass('mutebutton-muted-for-solo') );
+    var mb = $('#mute' + i);
+    return  (mb.hasClass('mutebutton-muted') ||
+        mb.hasClass('mutebutton-muted-for-solo'));
 }
 
 function setTrackGainUsingSlider(i) {
@@ -253,396 +266,455 @@ function setTrackGainUsingSlider(i) {
 }
 
 function setTrackGainUsingSliderAndMute(i) {
-  if (trackIsMutedOrTempMuted(i)) {
-    setTrackGain(i,0);
-  } else {    
-    setTrackGainUsingSlider(i);
-  }
-}
-function toggleSoloOn(elem, n) {
-  if (soloGroup.length > 0) {
-    console.log("adding " + n + " to existing solo group with " + soloGroup);
-    tempUnmuteTrack(n);
-  } else {
-    var otherIds = getAllTrackIdsExcept(n);
-    console.log("starting new solo group with " + n + " and temp-muting "+ otherIds);
-    otherIds.forEach(tempMuteTrack);
-  }
-  soloGroup.push(n);
-}
-function handleMuteButton(elem) {
-  console.log("Toggling mute on elem: " + elem.id);
-  var n    = getTrailingDigit(elem, "mute");
-  var pair = sourceAndGainPairs[n];
-  pair.gainNode.gain.cancelScheduledValues(context.currentTime);
-  console.log("before: " + pair.gainNode.gain.value + " and classes " + elem.classList);
-  
-  if (elem.classList.contains("mutebutton-muted")) {
-    if(!elem.classList.contains("mutebutton-muted-for-solo")) {
-      setTrackGainUsingSlider(n);
+    if (trackIsMutedOrTempMuted(i)) {
+        setTrackGain(i, 0);
     } else {
-      //still muted for solo
+        setTrackGainUsingSlider(i);
     }
-  } else {
-    //wasn't muted.  mute it.
-    pair.gainNode.gain.value = 0;
-  }  
-  elem.classList.toggle("mutebutton-muted");
-  console.log("after: " + pair.gainNode.gain.value + " and classes " + elem.classList);
 }
 
-function createSourceOnBuffer(b){
-  var src = context.createBufferSource();
-  src.playbackRate.value = 1;
-  src.buffer = b;
-  return src;
+function toggleSoloOn(elem, n) {
+    if (soloGroup.length > 0) {
+        console.log("adding " + n + " to existing solo group with " + soloGroup);
+        tempUnmuteTrack(n);
+    } else {
+        var otherIds = getAllTrackIdsExcept(n);
+        console.log("starting new solo group with " + n + " and temp-muting " + otherIds);
+        otherIds.forEach(tempMuteTrack);
+    }
+    soloGroup.push(n);
 }
 
-function createGainedSourceOnBuffer(b){
-  var src = createSourceOnBuffer(b);
-  var analyser = context.createAnalyser();
-  analyser.fftSize = fftConfig.size;
-  var bufferLength = analyser.frequencyBinCount;
-  var dataArray = new Uint8Array(bufferLength);
+function handleMuteButton(elem) {
+    console.log("Toggling mute on elem: " + elem.id);
+    var n = getTrailingDigit(elem, "mute");
+    var pair = sourceAndGainPairs[n];
+    pair.gainNode.gain.cancelScheduledValues(context.currentTime);
+    console.log("before: " + pair.gainNode.gain.value + " and classes " + elem.classList);
 
-  var gainNode = linkThroughGain(src);
-  gainNode.connect(analyser);
-
-  return { title: b, 
-           src: src, 
-           gainNode: gainNode, 
-           analyser: analyser,
-           dataArray: dataArray };
- }
-
- function createAllGainedSourcesOnBuffers(bufferList){
-  sourceAndGainPairs = bufferList.map(function (buf) { 
-    return createGainedSourceOnBuffer(buf);
-  });
+    if (elem.classList.contains("mutebutton-muted")) {
+        if (!elem.classList.contains("mutebutton-muted-for-solo")) {
+            setTrackGainUsingSlider(n);
+        } else {
+            //still muted for solo
+        }
+    } else {
+        //wasn't muted.  mute it.
+        pair.gainNode.gain.value = 0;
+    }
+    elem.classList.toggle("mutebutton-muted");
+    console.log("after: " + pair.gainNode.gain.value + " and classes " + elem.classList);
 }
-function simpleTrackName(i){
-  var input = trackNames[i];
-  return input.substr(0, input.lastIndexOf('.')) || input;
+
+function createSourceOnBuffer(b) {
+    var src = context.createBufferSource();
+    src.playbackRate.value = 1;
+    src.buffer = b;
+    return src;
+}
+
+function createGainedSourceOnBuffer(b) {
+    var src = createSourceOnBuffer(b);
+    var analyser = context.createAnalyser();
+    analyser.fftSize = fftConfig.size;
+    var bufferLength = analyser.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+
+    var gainNode = linkThroughGain(src);
+    gainNode.connect(analyser);
+
+    return {
+        title: b,
+        src: src,
+        gainNode: gainNode,
+        analyser: analyser,
+        dataArray: dataArray
+    };
+}
+
+function createAllGainedSourcesOnBuffers(bufferList) {
+    sourceAndGainPairs = bufferList.map(function (buf) {
+        return createGainedSourceOnBuffer(buf);
+    });
+}
+
+function simpleTrackName(i) {
+    var input = trackNames[i];
+    return input.substr(0, input.lastIndexOf('.')) || input;
 }
 
 function makeControlsForTrack(buf, i) {
 
-  var group      = $("<p/>", {id: "controlrow" + i, class: "sliderrow"});
-  var label      = $("<label/>", {text: simpleTrackName(i), title: trackNames[i]});//TODO: sanitise track names for security
-  var muteButton = $("<input/>", {type: "submit", id: "mute" + i, value: "Mute", class: "mutebutton btn btn-default"});
-  var soloButton = $("<input/>", {type: "submit", id: "solo" + i, value: "Solo", class: "solobutton btn btn-default"});
-  var slider     = $("<input/>", {type: "range", id: "vol" + i, value: "100", class: "slider", min: "0", max: "100", title: "Change volume of " + trackNames[i]});
-  var canvas     = $("<canvas/>", {id: "trackCanvas" + i, width:'500', height:'100'});
+    var group = $("<p/>", {
+        id: "controlrow" + i,
+        class: "sliderrow"
+    });
+    var label = $("<label/>", {
+        text: simpleTrackName(i),
+        title: trackNames[i]
+    }); //TODO: sanitise track names for security
+    var muteButton = $("<input/>", {
+        type: "submit",
+        id: "mute" + i,
+        value: "Mute",
+        class: "mutebutton btn btn-default"
+    });
+    var soloButton = $("<input/>", {
+        type: "submit",
+        id: "solo" + i,
+        value: "Solo",
+        class: "solobutton btn btn-default"
+    });
+    var slider = $("<input/>", {
+        type: "range",
+        id: "vol" + i,
+        value: "100",
+        class: "slider",
+        min: "0",
+        max: "100",
+        title: "Change volume of " + trackNames[i]
+    });
+    var canvas = $("<canvas/>", {
+        id: "trackCanvas" + i,
+        width: '500',
+        height: '100'
+    });
 
-  group.append(label);
-  group.append(muteButton);
-  group.append(soloButton);
-  group.append(slider);
-  group.append(canvas);
-  $("#controlset").append(group);
+    group.append(label);
+    group.append(muteButton);
+    group.append(soloButton);
+    group.append(slider);
+    group.append(canvas);
+    $("#controlset").append(group);
 
-  $('#vol'+i).on('change', function() { handleChangeVolumeSlider(this); } );
-  $('#mute'+i).on('click', function() { handleMuteButton(this); });
-  $('#solo'+i).on('click', function() { handleSoloButton(this); });
-  
+    $('#vol' + i).on('change', function () {
+        handleChangeVolumeSlider(this);
+    });
+    $('#mute' + i).on('click', function () {
+        handleMuteButton(this);
+    });
+    $('#solo' + i).on('click', function () {
+        handleSoloButton(this);
+    });
+
 }
 
 function createControlsInDOM(bufferList) {
-  bufferList.forEach(function(buf, i) {
-    makeControlsForTrack(buf, i);
-  });
-  $('#positionSlider').on('input', function() { handleChangePosition(this); } );
-  $('#playbackRateSlider').on('input', function() { handleChangePlaybackRate(this); } );
-  $('#playButton').on('click', function() { play(); } );
-  $('#stopButton').on('click', function() { stopAndDestroyAll(); } );
-  $('#snapshotButton').on('click', function() { snapshotTime(); } );
-  $('#clearButton').on('click', function() { clearMix(); } );
-  $('#randomiseButton').on('click', function() { randomiseMix(); } );
+    bufferList.forEach(function (buf, i) {
+        makeControlsForTrack(buf, i);
+    });
+    $('#positionSlider').on('input', function () {
+        handleChangePosition(this);
+    });
+    $('#playbackRateSlider').on('input', function () {
+        handleChangePlaybackRate(this);
+    });
+    $('#playButton').on('click', function () {
+        play();
+    });
+    $('#stopButton').on('click', function () {
+        stopAndDestroyAll();
+    });
+    $('#snapshotButton').on('click', function () {
+        snapshotTime();
+    });
+    $('#clearButton').on('click', function () {
+        clearMix();
+    });
+    $('#randomiseButton').on('click', function () {
+        randomiseMix();
+    });
 }
 
 function finishedLoading(bufferList) {
-  gBufferList = bufferList;
-  // Create three sources and play them both together.
-  createAllGainedSourcesOnBuffers(bufferList);
-  createControlsInDOM(bufferList);
+    gBufferList = bufferList;
+    // Create three sources and play them both together.
+    createAllGainedSourcesOnBuffers(bufferList);
+    createControlsInDOM(bufferList);
 
-  //play();
-}
-function wipeAllNodes(){
-  sourceAndGainPairs = [];
+    //play();
 }
 
-function linkThroughGain(src){
-  var gainNode = context.createGain();
-  src.connect(gainNode);
-  gainNode.connect(context.destination);
-  gainNode.gain.value = 1;
-  return gainNode;
+function wipeAllNodes() {
+    sourceAndGainPairs = [];
+}
+
+function linkThroughGain(src) {
+    var gainNode = context.createGain();
+    src.connect(gainNode);
+    gainNode.connect(context.destination);
+    gainNode.gain.value = 1;
+    return gainNode;
 }
 
 function getVolumeSliderValueForTrack(i) {
-  return getVolumeSliderValueFrom0To1($('#vol' + i).get()[0]);
+    return getVolumeSliderValueFrom0To1($('#vol' + i).get()[0]);
 }
 
-function getVolumeSliderValueFrom0To1(elem){
-  return (parseFloat(elem.value) / 100);
+function getVolumeSliderValueFrom0To1(elem) {
+    return (parseFloat(elem.value) / 100);
 }
 
 //TODO: integrate this quick hack
-function setVolumeSliderValueForTrack(i, val){
-  $('#vol' + i).val(val);
+function setVolumeSliderValueForTrack(i, val) {
+    $('#vol' + i).val(val);
 }
 
 //expected an input html element with id "vol1" or "vol2", and value from 0 to 100.
-function handleChangeVolumeSlider(elem){
-  //TODO: volume changes while no sources loaded must be allowed, and must persist when sources are reloaded (e.g. play position changed and all recreated).
-  // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
-  var i = getTrailingDigit(elem, "vol");  
-  if (!trackIsMutedOrTempMuted(i)) {
-    var g = getVolumeSliderValueFrom0To1(elem);
-    setTrackGain(i, g);
-    console.log("handleChangeVolumeSlider "+ elem.id + " i: "+ i +" val: " + elem.value);  
-  }
+function handleChangeVolumeSlider(elem) {
+    //TODO: volume changes while no sources loaded must be allowed, and must persist when sources are reloaded (e.g. play position changed and all recreated).
+    // The gain nodes won't necessarily exist?  Perhaps: hold a proxy for each gain setting, and map this on play() to the gain node, as well as immediately on slider changes, if applicable.
+    var i = getTrailingDigit(elem, "vol");
+    if (!trackIsMutedOrTempMuted(i)) {
+        var g = getVolumeSliderValueFrom0To1(elem);
+        setTrackGain(i, g);
+        console.log("handleChangeVolumeSlider " + elem.id + " i: " + i + " val: " + elem.value);
+    }
 }
 
-function lengthOfFirstBufferInSec(){
-  return sourceAndGainPairs[0].src.buffer.duration;
+function lengthOfFirstBufferInSec() {
+    return sourceAndGainPairs[0].src.buffer.duration;
 }
 
-function handleChangePosition(elem){
-  updatePosOffset(convertSliderValueToSeconds(elem));
-}
-function handleChangePlaybackRate(elem){
-  updatePlaybackRate(parseFloat(elem.value));
+function handleChangePosition(elem) {
+    updatePosOffset(convertSliderValueToSeconds(elem));
 }
 
-function convertSliderValueToSeconds(elem){
-  return Math.round(lengthOfFirstBufferInSec() * parseFloat(elem.value) / parseInt(elem.max));
+function handleChangePlaybackRate(elem) {
+    updatePlaybackRate(parseFloat(elem.value));
 }
 
-function stopAndDestroyAll(){
-  playStartedTime = -1;
-  var firstSource = sourceAndGainPairs[0].src;
-  if(firstSource !== null){
-    sourceAndGainPairs.forEach(function(pair) {
-      if (pair.src !== null) {
-        pair.src.stop(0);
-      }
-    } );
-    isPlaying = false;
-    wipeAllNodes();
-  }
+function convertSliderValueToSeconds(elem) {
+    return Math.round(lengthOfFirstBufferInSec() * parseFloat(elem.value) / parseInt(elem.max));
 }
+
+function stopAndDestroyAll() {
+    playStartedTime = -1;
+    var firstSource = sourceAndGainPairs[0].src;
+    if (firstSource !== null) {
+        sourceAndGainPairs.forEach(function (pair) {
+            if (pair.src !== null) {
+                pair.src.stop(0);
+            }
+        });
+        isPlaying = false;
+        wipeAllNodes();
+    }
+}
+
 function setAllSourcesToLoop(shouldLoop) {
-  sourceAndGainPairs.forEach(function(pair) {
-    pair.src.loop = shouldLoop;
-  } );
+    sourceAndGainPairs.forEach(function (pair) {
+        pair.src.loop = shouldLoop;
+    });
 }
 
-function drawAllAnims(){
+function drawAllAnims() {
 
-  var sharedCanvas = document.getElementById('trackCanvas'+0);
-  var canvasCtx = sharedCanvas.getContext('2d');
-  canvasCtx.fillStyle = 'white';
-  canvasCtx.fillRect(0, 0, sharedCanvas.width, sharedCanvas.height);
+    var sharedCanvas = document.getElementById('trackCanvas' + 0);
+    var canvasCtx = sharedCanvas.getContext('2d');
+    canvasCtx.fillStyle = 'white';
+    canvasCtx.fillRect(0, 0, sharedCanvas.width, sharedCanvas.height);
 
-  sourceAndGainPairs.forEach(function (pair, i) {
-    drawOneFFT(pair.analyser, pair.dataArray, i);
-  });
+    sourceAndGainPairs.forEach(function (pair, i) {
+        drawOneFFT(pair.analyser, pair.dataArray, i);
+    });
 
-  if (numFrames >= 0 ){
-    requestAnimationFrame(drawAllAnims);
-    numFrames += 1;
-  }
-  
+    if (numFrames >= 0) {
+        requestAnimationFrame(drawAllAnims);
+        numFrames += 1;
+    }
+
 }
 
-var MINVAL = 134;  // 128 == zero.  MINVAL is the "minimum detected signal" level.
+var MINVAL = 134; // 128 == zero.  MINVAL is the "minimum detected signal" level.
 
 
 function findFirstPositiveZeroCrossing(buf, buflen) {
-  var i = 0;
-  var last_zero = -1;
-  var t;
+    var i = 0;
+    var last_zero = -1;
+    var t;
 
-  // advance until we're zero or negative
-  while (i<buflen && (buf[i] > 128 ) ){
-    i++;
-  }
+    // advance until we're zero or negative
+    while (i < buflen && (buf[i] > 128)) {
+        i++;
+    }
 
-  if (i>=buflen){
-    return 0;
-  }
-  // advance until we're above MINVAL, keeping track of last zero.
-  while (i<buflen && ((t=buf[i]) < MINVAL )) {
-    if (t >= 128) {
-      if (last_zero === -1){
+    if (i >= buflen) {
+        return 0;
+    }
+    // advance until we're above MINVAL, keeping track of last zero.
+    while (i < buflen && ((t = buf[i]) < MINVAL)) {
+        if (t >= 128) {
+            if (last_zero === -1) {
+                last_zero = i;
+            }
+        } else {
+            last_zero = -1;
+        }
+        i++;
+    }
+
+    // we may have jumped over MINVAL in one sample.
+    if (last_zero === -1) {
         last_zero = i;
-      }
+    }
+
+    if (i == buflen) { // We didn't find any positive zero crossings
+        return 0;
+    }
+
+    // The first sample might be a zero.  If so, return it.
+    if (last_zero === 0) {
+        return 0;
+    }
+
+    return last_zero;
+}
+
+function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset) {
+    var canvasElem = sharedCanvas || document.getElementById('trackCanvas' + i);
+
+    var canvasCtx = canvasElem.getContext('2d');
+    var canvasHeight = canvasElem.height;
+    var canvasWidth = canvasElem.width;
+
+    yOffset = yOffset || 0;
+    //  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+    canvasCtx.fillStyle = 'white';
+    canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    if (fftConfig.type === "spectrum") {
+        analyser.getByteFrequencyData(dataArray);
     } else {
-      last_zero = -1;
+        analyser.getByteTimeDomainData(dataArray);
     }
-    i++;
-  }
-
-  // we may have jumped over MINVAL in one sample.
-  if (last_zero === -1) {
-    last_zero = i;
-  }
-
-  if (i==buflen) { // We didn't find any positive zero crossings
-    return 0;
-}
-
-  // The first sample might be a zero.  If so, return it.
-  if (last_zero === 0) {
-    return 0;
-  }
-
-  return last_zero;
-}
-function drawOneFFT(analyser, dataArray, i, sharedCanvas, yOffset){
-  var canvasElem = sharedCanvas || document.getElementById('trackCanvas'+i);
-
-  var canvasCtx = canvasElem.getContext('2d');
-  var canvasHeight = canvasElem.height;
-  var canvasWidth = canvasElem.width;
-
-  yOffset = yOffset || 0;
-  //  canvasCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-  canvasCtx.fillStyle = 'white';
-  canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  if (fftConfig.type === "spectrum") {
-    analyser.getByteFrequencyData(dataArray);
-  } else {
-    analyser.getByteTimeDomainData(dataArray);
-  }
 
 
-  var len = dataArray.length;
-  var stripeWidth = canvasWidth / len;
-  var vertScale = canvasHeight / 256;
-  var scaledVals = [];
+    var len = dataArray.length;
+    var stripeWidth = canvasWidth / len;
+    var vertScale = canvasHeight / 256;
+    var scaledVals = [];
 
-  for(var j = 0; j < len; j++) {
-    var val = dataArray[j] * vertScale;
-    scaledVals.push(val);
-  }  
-
-  if (fftConfig.type === "spectrum") {
-    drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
-  } else if (fftConfig.type === "waveform") {
-    if (signalAboveThreshold(dataArray)) {
-      if(useZeroCrossing) {
-        var zeroCross = findFirstPositiveZeroCrossing(dataArray, canvasWidth);
-        drawWaveformAtZeroCrossing(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset, zeroCross);
-      } else {
-        drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
-      }
+    for (var j = 0; j < len; j++) {
+        var val = dataArray[j] * vertScale;
+        scaledVals.push(val);
     }
-  } else { // no fft
 
-  }
-}
+    if (fftConfig.type === "spectrum") {
+        drawSpectrum(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
+    } else if (fftConfig.type === "waveform") {
+        if (signalAboveThreshold(dataArray)) {
+            if (useZeroCrossing) {
+                var zeroCross = findFirstPositiveZeroCrossing(dataArray, canvasWidth);
+                drawWaveformAtZeroCrossing(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset, zeroCross);
+            } else {
+                drawWaveform(canvasCtx, scaledVals, stripeWidth, canvasWidth, canvasHeight, yOffset);
+            }
+        }
+    } else { // no fft
 
-function signalAboveThreshold(arr){
-  var threshold = 3;
-  
-  for(var i = 0; i < arr.length; i+=1) {
-    var val = arr[i];
-    if (Math.abs(128 - val) > threshold) {
-      return true;
     }
-  }
-  return false;
-
 }
 
-function drawSpectrum(canvasCtx, scaledVals, stripeWidth, w, h, yOffset){
-  canvasCtx.globalAlpha = 0.5;
+function signalAboveThreshold(arr) {
+    var threshold = 3;
 
-  canvasCtx.fillStyle = 'rgb(255, 0, 0)';
-  scaledVals.forEach(function(v, i) { 
-    canvasCtx.fillRect(i*stripeWidth, h - v + yOffset, stripeWidth, v);
-  });
-}
-
-function drawWaveform(canvasCtx, scaledVals, step, w, h, yOffset){
-  canvasCtx.lineWidth = 3;
-  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
-  canvasCtx.beginPath();
-  var x = 0;
-
-  scaledVals.forEach(function(v, i) { 
-    var y = v + yOffset;
-    if(i === 0) {
-      canvasCtx.moveTo(x, y);
-    } else {
-      canvasCtx.lineTo(x, y);
+    for (var i = 0; i < arr.length; i += 1) {
+        var val = arr[i];
+        if (Math.abs(128 - val) > threshold) {
+            return true;
+        }
     }
-    x += step;
-  });
-  canvasCtx.stroke();
+    return false;
+
+}
+
+function drawSpectrum(canvasCtx, scaledVals, stripeWidth, w, h, yOffset) {
+    canvasCtx.globalAlpha = 0.5;
+
+    canvasCtx.fillStyle = 'rgb(255, 0, 0)';
+    scaledVals.forEach(function (v, i) {
+        canvasCtx.fillRect(i * stripeWidth, h - v + yOffset, stripeWidth, v);
+    });
+}
+
+function drawWaveform(canvasCtx, scaledVals, step, w, h, yOffset) {
+    canvasCtx.lineWidth = 3;
+    canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+    canvasCtx.beginPath();
+    var x = 0;
+
+    scaledVals.forEach(function (v, i) {
+        var y = v + yOffset;
+        if (i === 0) {
+            canvasCtx.moveTo(x, y);
+        } else {
+            canvasCtx.lineTo(x, y);
+        }
+        x += step;
+    });
+    canvasCtx.stroke();
 }
 
 
-function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, zeroCross){
+function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, zeroCross) {
 
-  canvasCtx.lineWidth = 3;
-  canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
-  canvasCtx.beginPath();
+    canvasCtx.lineWidth = 3;
+    canvasCtx.strokeStyle = 'rgb(0, 0, 0)';
+    canvasCtx.beginPath();
 
-  canvasCtx.moveTo(0,scaledVals[zeroCross]);
+    canvasCtx.moveTo(0, scaledVals[zeroCross]);
 
-  for (var i=zeroCross, j=0; (j<w)&&(i<scaledVals.length); i++, j++){
-    canvasCtx.lineTo(j, (scaledVals[i]));
-  }
+    for (var i = zeroCross, j = 0;
+        (j < w) && (i < scaledVals.length); i++, j++) {
+        canvasCtx.lineTo(j, (scaledVals[i]));
+    }
 
-  canvasCtx.stroke();
+    canvasCtx.stroke();
 }
 
-function play(){
-  if (isPlaying){
-    stopAndDestroyAll();
-    isPlaying = false;    
-  }
-  createAllGainedSourcesOnBuffers(gBufferList);
-  setAllSourcesToLoop(true);
-  setPlaybackRateForAllSources(playbackRate);
-  
-  getAllTrackIds().forEach(function(i) {
-    setTrackGainUsingSliderAndMute(i);
-  });
-  
-  playStartedTime = context.currentTime;
-  playStartedOffset = posOffset;
-  sourceAndGainPairs.forEach(function(pair) {
-    pair.src.start(0, posOffset);
-  } );
-  requestAnimationFrame(drawAllAnims);
+function play() {
+    if (isPlaying) {
+        stopAndDestroyAll();
+        isPlaying = false;
+    }
+    createAllGainedSourcesOnBuffers(gBufferList);
+    setAllSourcesToLoop(true);
+    setPlaybackRateForAllSources(playbackRate);
 
-  isPlaying = true;
+    getAllTrackIds().forEach(function (i) {
+        setTrackGainUsingSliderAndMute(i);
+    });
+
+    playStartedTime = context.currentTime;
+    playStartedOffset = posOffset;
+    sourceAndGainPairs.forEach(function (pair) {
+        pair.src.start(0, posOffset);
+    });
+    requestAnimationFrame(drawAllAnims);
+
+    isPlaying = true;
 }
-function setPlaybackRateForAllSources(r){
-  sourceAndGainPairs.forEach(function(pair) {
-    pair.src.playbackRate.value = r;
-  } );
+
+function setPlaybackRateForAllSources(r) {
+    sourceAndGainPairs.forEach(function (pair) {
+        pair.src.playbackRate.value = r;
+    });
 }
 
 function computeCurrentTrackTime() {
-  if (playStartedTime < 0) {
-    return -1;    
-  } else {
-    var elapsedSecs = context.currentTime - playStartedTime;
-    return playStartedOffset + elapsedSecs;
-  }
+    if (playStartedTime < 0) {
+        return -1;
+    } else {
+        var elapsedSecs = context.currentTime - playStartedTime;
+        return playStartedOffset + elapsedSecs;
+    }
 }
 
 function clearMix() {
     //TODO: encapsulate control of soloing, muting, and solo-groups.
     soloGroup = [];
-    getAllTrackIds().forEach(function(id) {
+    getAllTrackIds().forEach(function (id) {
         removeAnyMutingOnTrack(id);
         removeAnySoloingOnTrack(id);
         setVolumeSliderValueForTrack(id, 100);
@@ -650,14 +722,14 @@ function clearMix() {
     });
 }
 
-function randomIntBetween(min,max)
-{
-    return Math.floor(Math.random() * (max-min+1) + min);
+function randomIntBetween(min, max) {
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 function randomiseMix() {
     clearMix();
     var allTrackIds = getAllTrackIds();
+
     function howManyTracksToInclude(totalNum) {
         var min = Math.min(1, totalNum);
         var max = Math.max(1, totalNum - 1);
@@ -668,48 +740,61 @@ function randomiseMix() {
     trackIdsToMute.forEach(muteTrackNormally);
 }
 
-function snapshotTime(){
-  if (playStartedTime < 0){
-    //TODO: implement so we can snapshot whenever
-    console.log("ERROR: can't yet snapshot time when stopped");
-  } else {    
-    var trackTime = computeCurrentTrackTime();
-    var label = $('#snapshotName').val();
-    sectionStarts.push({time: trackTime, label: label});
-    recreateSectionStartsInDOM();
-  }
+function snapshotTime() {
+    if (playStartedTime < 0) {
+        //TODO: implement so we can snapshot whenever
+        console.log("ERROR: can't yet snapshot time when stopped");
+    } else {
+        var trackTime = computeCurrentTrackTime();
+        var label = $('#snapshotName').val();
+        sectionStarts.push({
+            time: trackTime,
+            label: label
+        });
+        recreateSectionStartsInDOM();
+    }
 }
+
 function updatePlaybackRate(val) {
-  playbackRate = val;
-  $("#playbackRateOutput").val(playbackRate);
+    playbackRate = val;
+    $("#playbackRateOutput").val(playbackRate);
 }
+
 function updatePosOffset(val) {
-  posOffset = val;
-  $("#positionOutput").val(posOffset);
+    posOffset = val;
+    $("#positionOutput").val(posOffset);
 }
 
 function jumpToSection(i) {
-  console.log("jump to section: " + i);
-  //var val = convertSecondsToSliderValue(sectionStarts[i]);
-  var secs = sectionStarts[i].time;
-  updatePosOffset(secs);
-  play();
-  //TODO: update slider to reflect new position
+    console.log("jump to section: " + i);
+    //var val = convertSecondsToSliderValue(sectionStarts[i]);
+    var secs = sectionStarts[i].time;
+    updatePosOffset(secs);
+    play();
+    //TODO: update slider to reflect new position
 }
 
 function recreateSectionStartsInDOM() {
-  $('#snapshots').html("");
+    $('#snapshots').html("");
 
-  function makeSnapshotElement(s, i) {
-    var timeText = "" + Math.round(s.time) + "s";
-    var labelSpan = $('<button/>', {class: "btn", text: (s.label || "untitled") + " @ "+timeText });
-    var listItem = $('<li/>', {class: "sectionStart", id: "sectionStart"+i});
-    listItem.append(labelSpan);
-    return listItem;
-  }
+    function makeSnapshotElement(s, i) {
+        var timeText = "" + Math.round(s.time) + "s";
+        var labelSpan = $('<button/>', {
+            class: "btn",
+            text: (s.label || "untitled") + " @ " + timeText
+        });
+        var listItem = $('<li/>', {
+            class: "sectionStart",
+            id: "sectionStart" + i
+        });
+        listItem.append(labelSpan);
+        return listItem;
+    }
 
-  sectionStarts.forEach(function(s, i) {
-    $('#snapshots').append(makeSnapshotElement(s, i));
-    $('#sectionStart'+i).on('click', function() { jumpToSection(i); });
-  });
-}  
+    sectionStarts.forEach(function (s, i) {
+        $('#snapshots').append(makeSnapshotElement(s, i));
+        $('#sectionStart' + i).on('click', function () {
+            jumpToSection(i);
+        });
+    });
+}

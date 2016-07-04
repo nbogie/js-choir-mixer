@@ -29,7 +29,6 @@ if (!Array.prototype.find) {
 
 var gBufferList;
 var gContext;
-var gBufferLoader;
 var gSourceAndGainPairs;
 
 var gTrackNames;
@@ -169,7 +168,8 @@ function initialiseWithSong(chosenSongInfo) {
         gSoloGroup = [];
         gIsPlaying = false;
         gContext = new AudioContext();
-        gBufferLoader = new BufferLoader(
+
+        var myBufferLoader = new BufferLoader(
             gContext,
             gTrackNames.map(function (n) {
                 return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
@@ -177,7 +177,7 @@ function initialiseWithSong(chosenSongInfo) {
             finishedLoading
         );
 
-        gBufferLoader.load();
+        myBufferLoader.load();
 
         window.setInterval(function () {
             $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));

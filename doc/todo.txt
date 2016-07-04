@@ -1,5 +1,7 @@
 * TODO: be sure that no intended-to-be-deleted nodes are being held onto through the lifetime of the app, e.g. referenced elsewhere.
 
+* When tracks are looping, time readout should loop, too.  Currently, it continues incrementing after the loop point.
+
 * don't dispose of the graph on stop() (at most, get rid of the buffersource nodes).  This will allow volume sliders and mute buttons to when nothing is playing.
 
 * when pressing stop multiple times, don't replace perfectly good source nodes.

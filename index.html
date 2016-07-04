@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>my mp3 mixer</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
 
-    <!-- Le styles -->
+<head>
+    <meta charset="utf-8">
+    <title>Neill's Choir Mixer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link href="assets/css/mystyle.css" rel="stylesheet">
 
-    <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
 
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="assets/js/html5shiv.js"></script>
-    <![endif]-->
+
     <script src="assets/js/jquery.js"></script>
 
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
@@ -26,7 +20,7 @@
 
     <script src='assets/js/mymp3mixer.js'></script>
     <script>
-      $( window ).load( initmp3mixer );
+        $(window).load(initmp3mixer);
     </script>
 
     <!-- Fav and touch icons -->
@@ -35,64 +29,61 @@
     <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
     <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
     <link rel="shortcut icon" href="assets/ico/favicon.png">
-  </head>
+</head>
 
-  <body class="container-fluid">
+<body class="container-fluid">
 
     <div class="row text-center">
-        <h1>My Choir MP3 Player</h1>
+        <h1>Neill's Choir Mixer</h1>
     </div>
 
-<div>
-  <p>Playing multiple mp3s with web audio, point-marking, volume-mixing, looping, mute/solo groups... </p>
+    <div>
+        <p>Play multiple mp3s with web audio, point-marking, volume-mixing, looping, mute/solo groups... </p>
 
-  <h2 id="songTitle"></h2>
+        <h2 id="songTitle"></h2>
 
-  <div id="controlset">
-  </div>
+        <div id="controlset">
+        </div>
 
-  <div id="transportbuttons">
-    <ul class="list-unstyled">
-      <li>
-          <input id="stopButton" type="button" value="stop" class="btn btn-danger"/>
-          <input id="playButton" type="button" value="play" class="btn btn-primary"/>
-          <input id="snapshotButton" type="button" value="mark time"  class="btn btn-warning"/>
-          <input id="snapshotName" type="text" value=""  class="btn btn-default"/>
-      </li>
-    </ul>
-  </div>
-  <div id="morebuttons">
-    <ul class="list-unstyled">
-      <li>
-          <input id="randomiseButton" type="button" value="randomise" class="btn btn-default"/>
-          <input id="clearButton" type="button" value="clear" class="btn btn-default"/>
-      </li>
-    </ul>
-  </div>
+        <div id="transportbuttons">
+            <ul class="list-unstyled">
+                <li>
+                    <input id="stopButton" type="button" value="stop" class="btn btn-danger" />
+                    <input id="playButton" type="button" value="play" class="btn btn-primary" />
+                    <input id="snapshotButton" type="button" value="mark time" class="btn btn-warning" />
+                    <input id="snapshotName" type="text" value="" class="btn btn-default" />
+                </li>
+            </ul>
+        </div>
+        <div id="morebuttons">
+            <ul class="list-unstyled">
+                <li>
+                    <input id="randomiseButton" type="button" value="randomise" class="btn btn-default" />
+                    <input id="clearButton" type="button" value="clear" class="btn btn-default" />
+                </li>
+            </ul>
+        </div>
 
-  <p>position:
-    <input id="positionSlider" type="range" min="0" max="100" value="100" step="0.3">
-    <input id="positionOutput" type="text" value="??"/>
-    <input id="positionMonitor" type="text" value="??"/>    
-  </p>
+        <p>position:
+            <input id="positionSlider" type="range" min="0" max="100" value="100" step="0.3">
+            <input id="positionOutput" type="text" value="??" />
+            <input id="positionMonitor" type="text" value="??" />
+        </p>
 
-  <p>playbackRate:
-    <input id="playbackRateSlider" type="range" min="0.5" max="4" value="1" step="0.05"> <!--  oninput="handleChangePlaybackRate(this);"> -->
-    <input id="playbackRateOutput" type="text" value="1"/>
-  </p>
+        <p>playbackRate:
+            <input id="playbackRateSlider" type="range" min="0.5" max="4" value="1" step="0.05">
+            <!--  oninput="handleChangePlaybackRate(this);"> -->
+            <input id="playbackRateOutput" type="text" value="1" />
+        </p>
 
-  <div>
-    <ul id="snapshots" class="list-unstyled">
-    </ul>
-  </div>
+        <div>
+            <ul id="snapshots" class="list-unstyled">
+            </ul>
+        </div>
 
 
-</div> <!-- /container -->
+    </div>
+    <!-- /container -->
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-
-  </body>
+</body>
 </html>
-

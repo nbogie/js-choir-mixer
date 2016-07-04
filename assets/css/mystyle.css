@@ -1,37 +1,12 @@
-input[type=range] {
-    width: 550px;
-}
-
-p.sliderrow>label
-{
-    width: 10%;
-    float: left;  
-}
-
-p.sliderrow>.mutebutton
-{
-    float: left;
-}
-p.sliderrow>.solobutton
-{
-    float: left;
-}
 p.sliderrow>.solobutton-on
 {
-    float: left;
     background: #CCCCFF;
 }
 p.sliderrow>.mutebutton-muted
 {
-    float: left;
     background: #CC9999;
 }
 p.sliderrow>.mutebutton-muted-for-solo
 {
-    float: left;
     background: #cccccc;
-}
-
-#transportbuttons>ul {
-  list-style-type: none;
 }

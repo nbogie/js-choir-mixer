@@ -110,20 +110,18 @@ function getSongInfos() {
 }
 
 function pickSong() {
-    alert('picking a song...');
     var selectedSongName = $('#song-select').val();
-    alert(selectedSongName);
-    alert(JSON.stringify(getSongInfos()));
-    var selectedSongInfo = getSongInfos().find(function(si) {
-        alert("comparing: " + JSON.stringify([si.name, selectedSongName, si.name==selectedSongName]));
-        return si.name == selectedSongName;
-    });
+    var sis = getSongInfos();
+    var selectedSongInfo = sis.find(
+        function(si) {
+            return si.name == selectedSongName;
+        }
+    );
     if (selectedSongInfo) {
-        alert("picked song: " + JSON.stringify(selectedSongInfo));
         initialiseWithSong(selectedSongInfo);
         $('#song-select-row').hide();
     } else {
-        alert('pick a song: '+ selectedSongName);
+        //no song picked
     }
 
 }

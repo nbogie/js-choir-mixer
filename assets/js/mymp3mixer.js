@@ -123,9 +123,11 @@ function initmp3mixer() {
     chosenSongInfo = allSongInfos[allSongInfos.length - 1];
 
     function finishInit() {
+        playbackRate = 1;
+        useZeroCrossing = true;
         soloGroup = [];
-        context = new AudioContext();
         isPlaying = false;
+        context = new AudioContext();
         bufferLoader = new BufferLoader(
             context,
             trackNames.map(function (n) {
@@ -136,25 +138,23 @@ function initmp3mixer() {
 
         bufferLoader.load();
 
-        $("#songTitle").html(songTitle);
-
         window.setInterval(function () {
             $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));
         }, 1000);
     }
 
-    $.getJSON(chosenSongInfo.fullpath, function (response) {
+    function handleJSON(response) {
         var json = response;
         songTitle = json.title || "Untitled";
+        $("#songTitle").html(songTitle);
         trackNames = json.tracks.map(function (t) {
             return t.name;
         });
         sectionStarts = json.sectionStarts || [];
-        playbackRate = 1;
-        useZeroCrossing = true;
         recreateSectionStartsInDOM();
         finishInit();
-    });
+    }
+    $.getJSON(chosenSongInfo.fullpath, handleJSON);
 }
 
 function getTrailingDigit(elem, prefix) {

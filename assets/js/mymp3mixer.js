@@ -112,7 +112,7 @@ function getSongInfos() {
 function pickSong() {
     console.log('clicked pickSong()');
     var selectedSongName = $('#song-select').val();
-    var selectedSongInfo = getSongInfos().find(si => si.name === selectedSongName);
+    var selectedSongInfo = getSongInfos().find(function(si) { return si.name === selectedSongName; });
     if (selectedSongInfo) {
         console.log("picked song: " + JSON.stringify(selectedSongInfo));
         initialiseWithSong(selectedSongInfo);

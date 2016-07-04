@@ -116,6 +116,7 @@ function pickSong() {
     if (selectedSongInfo) {
         console.log("picked song: " + JSON.stringify(selectedSongInfo));
         initialiseWithSong(selectedSongInfo);
+        $('#song-select-row').hide();
     } else {
         console.log("no (or unknown) song selected");
     }
@@ -770,6 +771,7 @@ function snapshotTime() {
             label: label
         });
         recreateSectionStartsInDOM();
+        $('#snapshotName').val("");
     }
 }
 

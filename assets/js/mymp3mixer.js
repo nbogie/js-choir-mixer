@@ -822,6 +822,8 @@ function cycleSoloNextTrack() {};
 $(document).keydown(function (evt) {
     //console.log([evt.which, evt.target.nodeName]);
     if(evt.target.nodeName != 'INPUT' && evt.target.nodeName != 'TEXTAREA') {
+        //TODO: perhaps only grab keypresses targetted on BODY?
+        //  We want arrows to work on sliders.  Input and Textarea already have special needs, too.
         switch (evt.keyCode) {
             case 37:
                 playPrevSectionStart();

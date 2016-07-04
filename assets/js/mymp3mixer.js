@@ -33,7 +33,6 @@ function removeFromArray(arr, o) {
     arr.splice(i, 1);
 }
 
-
 var gBufferList;
 var gContext;
 var gSourceAndGainPairs;
@@ -62,10 +61,14 @@ var gFFTConfigs = {
         size: 128
     }
 };
-
 var gFFTConfig = gFFTConfigs.waveform;
-
 var gUseZeroCrossing;
+
+
+// ----------------------------------------------
+// ------ BufferLoader functions ----------------
+// ----------------------------------------------
+
 
 function BufferLoader(context, urlList, callback) {
     this.context = context;
@@ -74,8 +77,6 @@ function BufferLoader(context, urlList, callback) {
     this.bufferList = [];
     this.loadCount = 0;
 }
-
-
 
 BufferLoader.prototype.loadBuffer = function (url, index) {
     // Load buffer asynchronously
@@ -116,6 +117,9 @@ BufferLoader.prototype.load = function () {
         this.loadBuffer(this.urlList[i], i);
     }
 };
+
+
+
 
 function getSongInfos() {
     var songDirsFree = ["close_to_me", "he_has_done_marvelous_things"];
@@ -386,7 +390,6 @@ function simpleTrackName(i) {
 }
 
 function makeControlsForTrack(buf, i) {
-
     var group = $("<p/>", {
         id: "controlrow" + i,
         class: "sliderrow"
@@ -463,6 +466,7 @@ function registerDOMControls() {
         randomiseMix();
     });
 }
+
 function createControlsInDOM(bufferList) {
     bufferList.forEach(function (buf, i) {
         makeControlsForTrack(buf, i);
@@ -549,6 +553,18 @@ function setAllSourcesToLoop(shouldLoop) {
         pair.src.loop = shouldLoop;
     });
 }
+
+
+
+
+
+
+// ----------------------------------------------
+// ------ Drawing functions ---------------------
+// ----------------------------------------------
+
+
+
 
 function drawAllAnims() {
 
@@ -698,7 +714,6 @@ function drawWaveform(canvasCtx, scaledVals, step, w, h, yOffset) {
     canvasCtx.stroke();
 }
 
-
 function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, zeroCross) {
 
     canvasCtx.lineWidth = 3;
@@ -714,6 +729,11 @@ function drawWaveformAtZeroCrossing(canvasCtx, scaledVals, step, w, h, yOffset, 
 
     canvasCtx.stroke();
 }
+
+
+
+
+
 
 function play() {
     if (gIsPlaying) {

@@ -125,11 +125,10 @@ function initmp3mixer() {
 
     bufferLoader.load();
     
-    document.getElementById("songTitle").innerHTML = songTitle;    
+    $("#songTitle").html(songTitle);
     
     window.setInterval(function() { 
-      var e = document.getElementById("positionMonitor");
-      e.value = computeCurrentTrackTime().toFixed(1);
+      $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));
     }, 1000);
   }
 
@@ -675,22 +674,18 @@ function snapshotTime(){
     console.log("ERROR: can't yet snapshot time when stopped");
   } else {    
     var trackTime = computeCurrentTrackTime();
-    var label = document.getElementById("snapshotName").value;
-    
+    var label = $('#snapshotName').val();
     sectionStarts.push({time: trackTime, label: label});
-    console.log("starts: "+ sectionStarts.map(function(s) { return s.label; }));
     recreateSectionStartsInDOM();
   }
 }
 function updatePlaybackRate(val) {
   playbackRate = val;
-  document.getElementById("playbackRateOutput").value = playbackRate;
-  console.log("playbackRate is now: " + playbackRate);
+  $("#playbackRateOutput").val(playbackRate);
 }
 function updatePosOffset(val) {
   posOffset = val;
-  document.getElementById("positionOutput").value = posOffset;
-  console.log("posOffset is now: " + posOffset);
+  $("#positionOutput").val(posOffset);
 }
 
 function jumpToSection(i) {
@@ -703,16 +698,18 @@ function jumpToSection(i) {
 }
 
 function recreateSectionStartsInDOM() {
-  $('#snapshots').innertHTML = "";
+  $('#snapshots').html("");
+
+  function makeSnapshotElement(s, i) {
+    var timeText = "" + Math.round(s.time) + "s";
+    var labelSpan = $('<button/>', {class: "btn", text: (s.label || "untitled") + " @ "+timeText });
+    var listItem = $('<li/>', {class: "sectionStart", id: "sectionStart"+i});
+    listItem.append(labelSpan);
+    return listItem;
+  }
 
   sectionStarts.forEach(function(s, i) {
-    var labelSpan = $('<span/>', {class: "sectionStartLabel", text: s.label});
-    var timeSpan = $('<span/>', {class: "sectionStartTime", text: Math.round(s.time)});
-    var listItem = $('<li/>', {class: "sectionStart", id: "sectionStart"+i});
-    listItem.append(timeSpan);
-    listItem.append(labelSpan);
-    $('#snapshots').append(listItem);    
+    $('#snapshots').append(makeSnapshotElement(s, i));
     $('#sectionStart'+i).on('click', function() { jumpToSection(i); });
-    console.log("clicking " + s.label + " will jump you to " +i);
   });
 }  

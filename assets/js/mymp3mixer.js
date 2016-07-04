@@ -1,6 +1,7 @@
 /*global $ */
 /*global _ */
 
+(function() {
 "use strict";
 
 if (!Array.prototype.find) {
@@ -25,8 +26,6 @@ if (!Array.prototype.find) {
     return undefined;
   };
 }
-
-
 
 
 var gBufferList;
@@ -149,11 +148,10 @@ function pickSong() {
         $('#song-select-row').hide();
     } else {
         //no song picked
+        console.log("No (or unknown) song picked.");
     }
-
 }
 
-/*exported initmp3mixer */
 function initmp3mixer() {
     // Fix up prefixing
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -877,3 +875,7 @@ $(document).keydown(function (evt) {
         }
     }
 });
+
+$(document).ready(initmp3mixer);
+
+}());

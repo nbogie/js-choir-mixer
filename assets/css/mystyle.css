@@ -10,3 +10,8 @@ p.sliderrow>.mutebutton-muted-for-solo
 {
     background: #cccccc;
 }
+
+li.sectionStart>.btn {
+    width: 30%;
+    text-align: left;
+}

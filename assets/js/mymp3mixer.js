@@ -780,7 +780,7 @@ function recreateSectionStartsInDOM() {
     function makeSnapshotElement(s, i) {
         var timeText = "" + Math.round(s.time) + "s";
         var labelSpan = $('<button/>', {
-            class: "btn",
+            class: "btn btn-default btn-sm",
             text: (s.label || "untitled") + " @ " + timeText
         });
         var listItem = $('<li/>', {

@@ -110,15 +110,15 @@ function getSongInfos() {
 }
 
 function pickSong() {
-    console.log('clicked pickSong()');
+    alert('picking a song...');
     var selectedSongName = $('#song-select').val();
     var selectedSongInfo = getSongInfos().find(function(si) { return si.name === selectedSongName; });
     if (selectedSongInfo) {
-        console.log("picked song: " + JSON.stringify(selectedSongInfo));
+        alert("picked song: " + JSON.stringify(selectedSongInfo));
         initialiseWithSong(selectedSongInfo);
         $('#song-select-row').hide();
     } else {
-        console.log("no (or unknown) song selected");
+        alert('pick a song: '+ selectedSongName);
     }
 
 }

@@ -121,6 +121,7 @@ BufferLoader.prototype.load = function () {
 
 
 
+
 function getSongInfos() {
     var songDirsFree = ["close_to_me", "he_has_done_marvelous_things"];
     var songDirs = ["deep_river", "as",
@@ -154,7 +155,7 @@ function pickSong() {
         }
     );
     if (selectedSongInfo) {
-        initialiseWithSong(selectedSongInfo);
+        initWithSongChoice(selectedSongInfo);
         $('#song-select-row').hide();
     } else {
         //no song picked
@@ -162,7 +163,11 @@ function pickSong() {
     }
 }
 
-function initmp3mixer() {
+
+
+
+
+function initBeforeSongChoice() {
     // Fix up prefixing
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     registerDOMControls();
@@ -171,7 +176,7 @@ function initmp3mixer() {
     });
 }
 
-function initialiseWithSong(chosenSongInfo) {
+function initWithSongChoice(chosenSongInfo) {
 
     function finishInit() {
         gPlaybackRate = 1;
@@ -179,13 +184,14 @@ function initialiseWithSong(chosenSongInfo) {
         gSoloGroup = [];
         gIsPlaying = false;
         gContext = new AudioContext();
+        var fullTrackPaths = gTrackNames.map(function (n) {
+            return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
+        });
 
         var myBufferLoader = new BufferLoader(
             gContext,
-            gTrackNames.map(function (n) {
-                return chosenSongInfo.root + chosenSongInfo.name + "/" + n;
-            }),
-            finishedLoading
+            fullTrackPaths,
+            finishedLoadingFn
         );
 
         myBufferLoader.load();
@@ -206,6 +212,7 @@ function initialiseWithSong(chosenSongInfo) {
         recreateSectionStartsInDOM();
         finishInit();
     }
+
     $.getJSON(chosenSongInfo.fullpath, handleJSON);
 }
 
@@ -473,7 +480,7 @@ function createControlsInDOM(bufferList) {
     });
 }
 
-function finishedLoading(bufferList) {
+function finishedLoadingFn(bufferList) {
     gBufferList = bufferList;
     // Create three sources and play them both together.
     createAllGainedSourcesOnBuffers(bufferList);
@@ -897,6 +904,6 @@ $(document).keydown(function (evt) {
     }
 });
 
-$(document).ready(initmp3mixer);
+$(document).ready(initBeforeSongChoice);
 
 }());

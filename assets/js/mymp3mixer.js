@@ -866,11 +866,13 @@ $(document).keydown(function (evt) {
             case 40:
                 cycleSoloNextTrack();
                 break;
-            case 82:
+            case 82: //'r'
                 randomiseMix();
                 break;
-            case 32:
-            case 80:
+            case 83: //'s'
+                stopAndDestroyAll();
+                break;
+            case 80: //'p'
                 play();//prevent propagation - space will scroll screen normally.
                 break;
             default:

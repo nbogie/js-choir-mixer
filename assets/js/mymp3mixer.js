@@ -397,43 +397,18 @@ function simpleTrackName(i) {
 }
 
 function makeControlsForTrack(buf, i) {
-    var group = $("<p/>", {
-        id: "controlrow" + i,
-        class: "sliderrow"
-    });
-    var label = $("<label/>", {
-        text: simpleTrackName(i),
-        title: gTrackNames[i]
-    }); //TODO: sanitise track names for security
-    var muteButton = $("<button/>", {
-        id: "mute" + i,
-        class: "mutebutton btn btn-default"
-    }).append("<i class='fa fa-volume-off'></i>");
-    var soloButton = $("<button/>", {
-        id: "solo" + i,
-        class: "solobutton btn btn-default"
-    }).append("<i class='fa fa-headphones'></i>");
-    var slider = $("<input/>", {
-        type: "range",
-        id: "vol" + i,
-        value: "100",
-        class: "slider",
-        min: "0",
-        max: "100",
-        title: "Change volume of " + gTrackNames[i]
-    });
-    var canvas = $("<canvas/>", {
-        id: "trackCanvas" + i,
-        width: '100%',  //not allowed in the spec to use percent here.
-        height: '100'
-    });
-
-    group.append(label);
-    group.append(muteButton);
-    group.append(soloButton);
-    group.append(slider);
-    group.append(canvas);
-    $("#controlset").append(group);
+    var clone = $('#controlrow-master').clone();
+    clone.removeAttr('id')
+         .attr('id', 'controlrow'+i);
+    //TODO: sanitise track names for security
+    clone.find('label').attr('title', gTrackNames[i])
+                       .text(simpleTrackName(i));
+    clone.find('.mutebutton').attr('id', 'mute'+i);
+    clone.find('.solobutton').attr('id', 'solo'+i);
+    clone.find('.slider').attr('id', 'vol'+i);
+    clone.find('canvas').attr('id', 'trackCanvas'+i);
+    clone.removeAttr("style");
+    $("#controlset").append(clone);
 
     $('#vol' + i).on('change', function () {
         handleChangeVolumeSlider(this);

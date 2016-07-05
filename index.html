@@ -58,8 +58,18 @@
         </div>
 
         <div class="row">
+
             <div id="controlset" class="col-md-6 col-lg-8">
             </div>
+            <!--MASTER, to clone into the controlset, above: -->
+            <p id="controlrow-master" class="sliderrow" style="display:none">
+                <label title="track-name.mp3">Track display-name here...</label>
+                <button class="mutebutton btn btn-default"><i class="fa fa-volume-off"></i></button>
+                <button class="solobutton btn btn-default"><i class="fa fa-headphones"></i></button>
+                <input  class="slider" type="range" value="100" min="0" max="100">
+                <canvas></canvas>
+            </p>
+
             <div class="col-md-6 col-lg-4">
                 <div id="transportbuttons">
                     <ul class="list-unstyled">
@@ -101,6 +111,8 @@
         </div>
 
     </div>
+
+
 
 </body>
 

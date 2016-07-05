@@ -125,7 +125,7 @@ BufferLoader.prototype.load = function () {
 function getSongInfos() {
     var songDirsFree = ["close_to_me", "he_has_done_marvelous_things"];
     var songDirs = ["deep_river", "as",
-                    "pretty_hurts", "get_lucky_the_few", "hymn_of_acxiom_the_few",
+                    "pretty_hurts", "motherless_child", "get_lucky_the_few", "hymn_of_acxiom_the_few",
                     "good_news", "africa", "am_i_wrong", "do_you_hear"];
 
     function makePathToSongMetaData(root, name) {

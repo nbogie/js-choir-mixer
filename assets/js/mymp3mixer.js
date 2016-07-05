@@ -131,7 +131,7 @@ function getSongInfos() {
     function makePathToSongMetaData(root, name) {
         return root + name + "/index.json";
     }
-    var allSongInfos = [[songDirs, 'sounds/'], [songDirsFree, 'sounds-free/']]
+    var allSongInfos = [[songDirsFree, 'sounds-free/'], [songDirs, 'sounds/']]
         .map(function (arr) {
             var names = arr[0],
                 root = arr[1];

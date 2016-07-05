@@ -424,7 +424,7 @@ function makeControlsForTrack(buf, i) {
     });
     var canvas = $("<canvas/>", {
         id: "trackCanvas" + i,
-        width: '500',
+        width: '100%',  //not allowed in the spec to use percent here.
         height: '100'
     });
 

@@ -199,6 +199,8 @@ function initWithSongChoice(chosenSongInfo) {
         window.setInterval(function () {
             $("#positionMonitor").val(computeCurrentTrackTime().toFixed(1));
         }, 1000);
+
+        requestAnimationFrame(drawAllAnimsLoop);
     }
 
     function handleJSON(response) {
@@ -548,8 +550,12 @@ function setAllSourcesToLoop(shouldLoop) {
 
 
 
-function drawAllAnims() {
+function drawAllAnimsLoop() {
 
+    if (!gIsPlaying) {
+        requestAnimationFrame(drawAllAnimsLoop);
+        return;
+    }
     var sharedCanvas = document.getElementById('trackCanvas' + 0);
     var canvasCtx = sharedCanvas.getContext('2d');
     canvasCtx.fillStyle = 'white';
@@ -559,11 +565,8 @@ function drawAllAnims() {
         drawOneFFT(pair.analyser, pair.dataArray, i);
     });
 
-    if (gFrameNumber >= 0) {
-        requestAnimationFrame(drawAllAnims);
-        gFrameNumber += 1;
-    }
-
+    gFrameNumber += 1;
+    requestAnimationFrame(drawAllAnimsLoop);
 }
 
 function findFirstPositiveZeroCrossing(buf, buflen) {
@@ -735,7 +738,6 @@ function play() {
     gSourceAndGainPairs.forEach(function (pair) {
         pair.src.start(0, gPosOffset);
     });
-    requestAnimationFrame(drawAllAnims);
 
     gIsPlaying = true;
 }
